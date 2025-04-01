@@ -9,7 +9,12 @@ import org.springframework.context.annotation.Bean;
 public class Aclabs22Application {
 
 	public static void main(String[] args) {
-		System.setProperty("com.sun.jndi.ldap.object.trustURLCodebase", "true");
+		//System.setProperty("com.sun.jndi.ldap.object.trustURLCodebase", "true");
 		SpringApplication.run(Aclabs22Application.class, args);
+	}
+
+	@Bean
+	public AccountService getAccountService() {
+		return new AccountService();
 	}
 }
