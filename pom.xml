@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.aciworldwide</groupId>
-	<artifactId>aclabs22</artifactId>
+	<artifactId>aclabs26</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>aclabs22</name>
+	<name>aclabs26</name>
 	<description>Liga AC 2022 Project</description>
 	<properties>
 		<java.version>1.8</java.version>

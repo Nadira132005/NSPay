@@ -1,16 +1,16 @@
-package com.aciworldwide.aclabs22;
+package com.aciworldwide.aclabs26;
 
-import com.aciworldwide.aclabs22.services.AccountService;
+import com.aciworldwide.aclabs26.services.AccountService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-public class Aclabs22Application {
+public class Aclabs26Application {
 
 	public static void main(String[] args) {
 		//System.setProperty("com.sun.jndi.ldap.object.trustURLCodebase", "true");
-		SpringApplication.run(Aclabs22Application.class, args);
+		SpringApplication.run(Aclabs26Application.class, args);
 	}
 
 	@Bean

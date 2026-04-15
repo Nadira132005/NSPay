@@ -1,6 +1,6 @@
-package com.aciworldwide.aclabs22.controllers;
+package com.aciworldwide.aclabs26.controllers;
 
-import com.aciworldwide.aclabs22.services.AccountService;
+import com.aciworldwide.aclabs26.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
