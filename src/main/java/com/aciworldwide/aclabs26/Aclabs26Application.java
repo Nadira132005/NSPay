@@ -15,6 +15,7 @@ public class Aclabs26Application {
 
 	@Bean
 	public AccountService getAccountService() {
+
 		return new AccountService();
 	}
 }

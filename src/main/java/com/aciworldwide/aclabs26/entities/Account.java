@@ -1,5 +1,8 @@
 package com.aciworldwide.aclabs26.entities;
 
+import lombok.Data;
+
+@Data
 public class Account {
 
     private long id;
