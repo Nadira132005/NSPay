@@ -1,8 +1,12 @@
 package com.aciworldwide.aclabs26.entities;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Account {
 
     private long id;
@@ -13,16 +17,4 @@ public class Account {
     private double dailyTxSumLimit;
     private int dailyTx;
     private double dailyTxSum;
-
-
-    public Account(long id, String cardNumber, String cardHolderName, double amount, int dailyTxLimit, double dailyTxSumLimit, int dailyTx, double dailyTxSum) {
-        this.id = id;
-        this.cardNumber = cardNumber;
-        this.cardHolderName = cardHolderName;
-        this.amount = amount;
-        this.dailyTxLimit = dailyTxLimit;
-        this.dailyTxSumLimit = dailyTxSumLimit;
-        this.dailyTx = dailyTx;
-        this.dailyTxSum = dailyTxSum;
-    }
 }
