@@ -5,6 +5,8 @@ import com.aciworldwide.aclabs26.exceptions.ValidationException;
 import com.aciworldwide.aclabs26.services.TransactionService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +19,7 @@ import javax.validation.Valid;
 
 @RestController
 @RequestMapping(path = "/transaction")
+@Tag(name = "Transactions", description = "Operations related to transactions")
 public class TransactionController {
 
     private static final Logger logger = LogManager.getLogger(TransactionController.class);
@@ -28,6 +31,7 @@ public class TransactionController {
     }
 
     @PostMapping
+    @Operation(summary = "Process a transaction")
     public ResponseEntity<?> processTransaction(@Valid @RequestBody TransactionDTO transactionDTO,
                                                 BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
