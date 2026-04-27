@@ -3,6 +3,8 @@ package com.aciworldwide.aclabs26.controllers;
 import com.aciworldwide.aclabs26.dto.TransactionDTO;
 import com.aciworldwide.aclabs26.exceptions.ValidationException;
 import com.aciworldwide.aclabs26.services.TransactionService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,6 +18,8 @@ import javax.validation.Valid;
 @RestController
 @RequestMapping(path = "/transaction")
 public class TransactionController {
+
+    private static final Logger logger = LogManager.getLogger(TransactionController.class);
 
     private final TransactionService transactionService;
 
@@ -34,6 +38,8 @@ public class TransactionController {
                     .orElse("Invalid transaction");
             throw new ValidationException(message);
         }
+        logger.info("Transaction request received for card {}", transactionDTO.getCardNumber());
+        transactionService.processTransaction(transactionDTO);
         return ResponseEntity.ok("transaction passed successfully");
     }
 
