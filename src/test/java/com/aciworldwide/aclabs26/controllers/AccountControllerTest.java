@@ -2,6 +2,7 @@ package com.aciworldwide.aclabs26.controllers;
 
 import com.aciworldwide.aclabs26.entities.Account;
 import com.aciworldwide.aclabs26.dto.AccountDTO;
+import com.aciworldwide.aclabs26.exceptions.GlobalExceptionHandler;
 import com.aciworldwide.aclabs26.services.AccountService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +13,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.context.annotation.Import;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -27,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AccountController.class)
+@Import(GlobalExceptionHandler.class)
 class AccountControllerTest {
 
     @Autowired
@@ -113,4 +117,14 @@ class AccountControllerTest {
         mockMvc.perform(delete("/accounts/1"))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    void shouldReturnBadRequestForInvalidAccount() throws Exception {
+        mockMvc.perform(post("/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cardHolderName\":\"\",\"amount\":0,\"dailyTxLimit\":0,\"dailyTxSumLimit\":0,\"dailyTx\":0,\"dailyTxSum\":0}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", containsString("Card number is required")));
+    }
+
 }
