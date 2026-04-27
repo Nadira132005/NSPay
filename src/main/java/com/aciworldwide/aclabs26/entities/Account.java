@@ -1,5 +1,8 @@
 package com.aciworldwide.aclabs26.entities;
 
+import lombok.Data;
+
+@Data
 public class Account {
 
     private long id;
@@ -10,7 +13,6 @@ public class Account {
     private double dailyTxSumLimit;
     private int dailyTx;
     private double dailyTxSum;
-
 
     public Account(long id, String cardNumber, String cardHolderName, double amount, int dailyTxLimit, double dailyTxSumLimit, int dailyTx, double dailyTxSum) {
         this.id = id;
