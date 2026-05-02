@@ -3,6 +3,7 @@ package com.aciworldwide.aclabs26.controllers;
 import com.aciworldwide.aclabs26.dto.TransactionDTO;
 import com.aciworldwide.aclabs26.exceptions.ValidationException;
 import com.aciworldwide.aclabs26.services.TransactionService;
+import com.aciworldwide.aclabs26.validators.ValidationResults;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,9 +43,14 @@ public class TransactionController {
                     .orElse("Invalid transaction");
             throw new ValidationException(message);
         }
+
         logger.info("Transaction request received for card {}", transactionDTO.getCardNumber());
-        transactionService.processTransaction(transactionDTO);
-        return ResponseEntity.ok("transaction passed successfully");
+        ValidationResults validationResults = transactionService.processTransaction(transactionDTO);
+        if (!validationResults.isValid()) {
+            return ResponseEntity.badRequest().body(validationResults);
+        }
+
+        return ResponseEntity.ok().body(validationResults);
     }
 
     private String formatFieldError(FieldError fieldError) {

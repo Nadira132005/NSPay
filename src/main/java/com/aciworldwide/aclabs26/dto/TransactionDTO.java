@@ -8,6 +8,8 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Positive;
 
+import java.sql.Timestamp;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -18,5 +20,6 @@ public class TransactionDTO {
 
     @Schema(description = "Transaction amount")
     @Positive(message = "Amount must be greater than zero")
-    private double amount;
+    private Double amount;
+    private Timestamp timestamp;
 }

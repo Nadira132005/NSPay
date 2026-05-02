@@ -1,0 +1,32 @@
+package com.aciworldwide.aclabs26.entities;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+
+@Data
+@Entity
+@NoArgsConstructor
+@Table(name="ACCOUNTS")
+public class AccountModel {
+
+    @Id
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    private long id;
+
+    @Column(unique = true)
+    private String cardNumber;
+
+    private String cardHolderName;
+    private double amount;
+    private int dailyTxLimit;
+    private double dailyTxSumLimit;
+    private int dailyTx;
+    private double dailyTxSum;
+
+
+    public boolean dailyTxLimitExceeded() {
+        return dailyTx > dailyTxLimit;
+    }
+}
