@@ -8,25 +8,25 @@ public class StructuralValidator {
 
     public ValidationResults validate(TransactionDTO transactionDTO) {
         if (transactionDTO == null) {
-            return ValidationResults.failure("98", "Transaction is required");
+            return ValidationResults.failure(ResponseCode.INVALID_CARD_NUMBER, "Transaction is required");
         }
 
         if (transactionDTO.getCardNumber() == null || transactionDTO.getCardNumber().trim().isEmpty()) {
-            return ValidationResults.failure("98", "Card number is required");
+            return ValidationResults.failure(ResponseCode.INVALID_CARD_NUMBER, "Card number is required");
         }
 
         if (transactionDTO.getAmount() == null) {
-            return ValidationResults.failure("100", "Amount is required");
+            return ValidationResults.failure(ResponseCode.INVALID_CARD_NUMBER, "Amount is required");
         }
 
         if (transactionDTO.getAmount() <= 0) {
-            return ValidationResults.failure("100", "Amount must be greater than zero");
+            return ValidationResults.failure(ResponseCode.INVALID_CARD_NUMBER, "Amount must be greater than zero");
         }
 
         if (transactionDTO.getTimestamp() == null) {
-            return ValidationResults.failure("101", "Timestamp is required");
+            return ValidationResults.failure(ResponseCode.INVALID_CARD_NUMBER, "Timestamp is required");
         }
 
-        return ValidationResults.success(false, "00", "Structural validation passed");
+        return ValidationResults.success(false, ResponseCode.APPROVED, "Structural validation passed");
     }
 }

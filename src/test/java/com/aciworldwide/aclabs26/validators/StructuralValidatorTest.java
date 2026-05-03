@@ -18,7 +18,7 @@ class StructuralValidatorTest {
         ValidationResults results = structuralValidator.validate(dto);
 
         assertThat(results.isValid()).isFalse();
-        assertThat(results.getCode()).isEqualTo("101");
+        assertThat(results.getCode()).isEqualTo(ResponseCode.INVALID_CARD_NUMBER);
     }
 
     @Test
@@ -28,6 +28,6 @@ class StructuralValidatorTest {
         ValidationResults results = structuralValidator.validate(dto);
 
         assertThat(results.isValid()).isTrue();
-        assertThat(results.getCode()).isEqualTo("00");
+        assertThat(results.getCode()).isEqualTo(ResponseCode.APPROVED);
     }
 }

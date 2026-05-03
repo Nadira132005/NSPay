@@ -33,7 +33,7 @@ public class TransactionService {
         }
 
         TransactionModel transactionModel = new TransactionModel(transactionDTO);
-        transactionModel.setReturnCode(validationResults.getCode());
+        transactionModel.setReturnCode(validationResults.getCode().getCode());//ResponseCode.NOT_SUFFICIENT_FUNDS.getCode()->"51"
         transactionRepository.save(transactionModel);
         if(validationResults.isBusinessLogicViolation()){
             return validationResults;

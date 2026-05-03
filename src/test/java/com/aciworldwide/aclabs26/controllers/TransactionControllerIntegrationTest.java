@@ -71,7 +71,7 @@ class TransactionControllerIntegrationTest {
     }
 
     @Test
-    void shouldReturnDailyLimitExceeded() throws Exception {
+    void shouldReturnDailyFrequencyLimitExceeded() throws Exception {
         AccountModel account = accountRepository.findByCardNumber("1234567812345678");
         account.setDailyTxLimit(0);
         account.setDailyTx(1);

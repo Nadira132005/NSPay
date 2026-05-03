@@ -17,23 +17,26 @@ public class BusinessValidator {
     public ValidationResults validate(TransactionDTO transactionDTO) {
         AccountModel accountModel = accountRepository.findByCardNumber(transactionDTO.getCardNumber());
         if (accountModel == null) {
-            return ValidationResults.failure("99", "Account not found");
+            return ValidationResults.failure(ResponseCode.INVALID_CARD_NUMBER, "Account not found");
         }
 
         Double amount = transactionDTO.getAmount();
         if (amount == null) {
-            return ValidationResults.failure("100", "Amount is null");
+            return ValidationResults.failure(ResponseCode.INVALID_CARD_NUMBER, "Amount is null");
         }
 
-        if (accountModel.getDailyTx() >= accountModel.getDailyTxLimit()
-                || accountModel.getDailyTxSum() + amount > accountModel.getDailyTxSumLimit()) {
-            return ValidationResults.success(true, "61", "Daily tx limit exceeded");
+        if (accountModel.getDailyTxSum() + amount > accountModel.getDailyTxSumLimit()) {
+            return ValidationResults.success(true, ResponseCode.DAILY_TX_SUM_EXCEEDED, "Daily tx amount limit exceeded");
+        }
+
+        if (accountModel.getDailyTx() >= accountModel.getDailyTxLimit()) {
+            return ValidationResults.success(true, ResponseCode.DAILY_TX_LIMIT_EXCEEDED, "Daily tx frequency limit exceeded");
         }
 
         if (accountModel.getAmount() < amount) {
-            return ValidationResults.success(true, "51", "Insufficient funds");
+            return ValidationResults.success(true, ResponseCode.NOT_SUFFICIENT_FUNDS, "Insufficient funds");
         }
 
-        return ValidationResults.success(false, "00", "Successful Payment");
+        return ValidationResults.success(false, ResponseCode.APPROVED, "Successful Payment");
     }
 }

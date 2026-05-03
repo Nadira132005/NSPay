@@ -31,7 +31,7 @@ class BusinessValidatorTest {
         ValidationResults results = businessValidator.validate(dto);
 
         assertThat(results.isValid()).isFalse();
-        assertThat(results.getCode()).isEqualTo("99");
+        assertThat(results.getCode()).isEqualTo(ResponseCode.INVALID_CARD_NUMBER);
     }
 
     @Test
@@ -67,6 +67,6 @@ class BusinessValidatorTest {
 
         assertThat(results.isValid()).isTrue();
         assertThat(results.isBusinessLogicViolation()).isFalse();
-        assertThat(results.getCode()).isEqualTo("00");
+        assertThat(results.getCode()).isEqualTo(ResponseCode.APPROVED);
     }
 }
