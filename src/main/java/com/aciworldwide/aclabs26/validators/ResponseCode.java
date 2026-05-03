@@ -15,7 +15,7 @@ public enum ResponseCode { //ResponseCode.getCode() returns a String -> e.g "00"
         this.code = code;
     }
 
-    @JsonValue
+    @JsonValue //  enum -> JSON
     public String getCode() {
         return code;
     }
