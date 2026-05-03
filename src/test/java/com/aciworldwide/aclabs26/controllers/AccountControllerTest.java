@@ -29,8 +29,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(AccountController.class)
+@WebMvcTest(AccountController.class) //controller-only tests
 @Import(GlobalExceptionHandler.class)
+//we mock the repository and we test the endpoints
 class AccountControllerTest {
 
     @Autowired

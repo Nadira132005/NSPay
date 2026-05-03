@@ -50,5 +50,6 @@ private void updateAccount(AccountModel accountModel, double amount){
             accountModel.setAmount(accountModel.getAmount()-amount);
             accountModel.setDailyTx(accountModel.getDailyTx() + 1);
             accountModel.setDailyTxSum(accountModel.getDailyTxSum() + amount);
+            accountRepository.save(accountModel);
 }
 }

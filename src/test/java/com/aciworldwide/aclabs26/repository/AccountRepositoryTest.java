@@ -7,8 +7,9 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+//we simulate the connection with the real database using in-memory database
 
-@DataJpaTest
+@DataJpaTest //repository/database tests
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class AccountRepositoryTest {
 
@@ -56,5 +57,45 @@ class AccountRepositoryTest {
 
         assertThat(accountRepository.findAll())
                 .hasSizeGreaterThanOrEqualTo(2);
+    }
+
+    @Test
+    void shouldUpdateExistingAccountWhenSavedWithSameId() {
+        AccountModel account = new AccountModel();
+        account.setCardNumber("2222333344445555");
+        account.setCardHolderName("Original User");
+        account.setAmount(10.0);
+        account.setDailyTxLimit(2);
+        account.setDailyTxSumLimit(200.0);
+        account.setDailyTx(0);
+        account.setDailyTxSum(0.0);
+
+        AccountModel saved = accountRepository.save(account);
+
+        saved.setCardHolderName("Updated User");
+        saved.setAmount(25.0);
+        AccountModel updated = accountRepository.save(saved);
+
+        AccountModel found = accountRepository.findById(updated.getId()).orElse(null);
+        assertThat(found).isNotNull();
+        assertThat(found.getCardHolderName()).isEqualTo("Updated User");
+        assertThat(found.getAmount()).isEqualTo(25.0);
+    }
+
+    @Test
+    void shouldDeleteAccountById() {
+        AccountModel account = new AccountModel();
+        account.setCardNumber("3333444455556666");
+        account.setCardHolderName("Delete User");
+        account.setAmount(40.0);
+        account.setDailyTxLimit(4);
+        account.setDailyTxSumLimit(400.0);
+        account.setDailyTx(0);
+        account.setDailyTxSum(0.0);
+
+        AccountModel saved = accountRepository.save(account);
+        accountRepository.deleteById(saved.getId());
+
+        assertThat(accountRepository.findById(saved.getId())).isEmpty();
     }
 }

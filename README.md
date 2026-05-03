@@ -8,12 +8,12 @@ mvn clean install
 mvn spring-boot:run
 
 # API documentation
-Swagger UI: `http://localhost:8080/swagger-ui.html`
-OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+Swagger UI: `http://localhost:8082/swagger-ui.html`
+OpenAPI JSON: `http://localhost:8082/v3/api-docs`
 Generate a local JSON file with:
 ```bash
-curl http://localhost:8080/v3/api-docs -o openapi.json
+curl http://localhost:8082/v3/api-docs -o openapi.json
 ```
 # Actuator
 Actuator endpoints are exposed on:
-`http://localhost:8080/actuator`
+`http://localhost:8082/actuator`

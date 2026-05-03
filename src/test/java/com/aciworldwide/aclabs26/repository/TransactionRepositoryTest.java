@@ -44,4 +44,36 @@ class TransactionRepositoryTest {
                 .extracting(TransactionModel::getReturnCode)
                 .isEqualTo("51");
     }
+
+    @Test
+    void shouldReturnAllSavedTransactions() {
+        TransactionModel first = new TransactionModel();
+        first.setCardNumber("1010101010101010");
+        first.setAmount(5.0);
+        first.setReturnCode("00");
+
+        TransactionModel second = new TransactionModel();
+        second.setCardNumber("2020202020202020");
+        second.setAmount(7.5);
+        second.setReturnCode("51");
+
+        transactionRepository.save(first);
+        transactionRepository.save(second);
+
+        assertThat(transactionRepository.findAll())
+                .hasSizeGreaterThanOrEqualTo(2);
+    }
+
+    @Test
+    void shouldDeleteTransactionById() {
+        TransactionModel transaction = new TransactionModel();
+        transaction.setCardNumber("3030303030303030");
+        transaction.setAmount(11.0);
+        transaction.setReturnCode("00");
+
+        TransactionModel saved = transactionRepository.save(transaction);
+        transactionRepository.deleteById(saved.getId());
+
+        assertThat(transactionRepository.findById(saved.getId())).isEmpty();
+    }
 }
