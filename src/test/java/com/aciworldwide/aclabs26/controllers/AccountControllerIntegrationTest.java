@@ -1,6 +1,7 @@
 package com.aciworldwide.aclabs26.controllers;
 
 import com.aciworldwide.aclabs26.entities.AccountModel;
+import com.aciworldwide.aclabs26.entities.AccountStatus;
 import com.aciworldwide.aclabs26.repository.AccountRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -108,6 +109,7 @@ class AccountControllerIntegrationTest {
         AccountModel account = new AccountModel();
         account.setCardNumber(cardNumber);
         account.setCardHolderName(cardHolderName);
+        account.setStatus(AccountStatus.ACTIVE);
         account.setAmount(amount);
         account.setDailyTxLimit(1000000);
         account.setDailyTxSumLimit(1000000000.0);

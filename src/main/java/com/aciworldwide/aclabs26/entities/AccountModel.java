@@ -19,6 +19,8 @@ public class AccountModel {
     private String cardNumber;
 
     private String cardHolderName;
+    @Enumerated(EnumType.STRING)
+    private AccountStatus status = AccountStatus.ACTIVE;
     private double amount;
     private int dailyTxLimit;
     private double dailyTxSumLimit;

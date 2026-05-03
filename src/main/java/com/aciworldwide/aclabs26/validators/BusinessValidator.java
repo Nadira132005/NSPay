@@ -2,6 +2,7 @@ package com.aciworldwide.aclabs26.validators;
 
 import com.aciworldwide.aclabs26.dto.TransactionDTO;
 import com.aciworldwide.aclabs26.entities.AccountModel;
+import com.aciworldwide.aclabs26.entities.AccountStatus;
 import com.aciworldwide.aclabs26.repository.AccountRepository;
 import org.springframework.stereotype.Component;
 
@@ -18,6 +19,10 @@ public class BusinessValidator {
         AccountModel accountModel = accountRepository.findByCardNumber(transactionDTO.getCardNumber());
         if (accountModel == null) {
             return ValidationResults.failure(ResponseCode.INVALID_CARD_NUMBER, "Account not found");
+        }
+
+        if (accountModel.getStatus() != AccountStatus.ACTIVE) {
+            return ValidationResults.failure(ResponseCode.INACTIVE_ACCOUNT, "Account is not active");
         }
 
         Double amount = transactionDTO.getAmount();

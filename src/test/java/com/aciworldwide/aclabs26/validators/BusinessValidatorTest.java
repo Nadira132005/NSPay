@@ -2,6 +2,7 @@ package com.aciworldwide.aclabs26.validators;
 
 import com.aciworldwide.aclabs26.dto.TransactionDTO;
 import com.aciworldwide.aclabs26.entities.AccountModel;
+import com.aciworldwide.aclabs26.entities.AccountStatus;
 import com.aciworldwide.aclabs26.repository.AccountRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,13 +43,31 @@ class BusinessValidatorTest {
         account.setAmount(100.0);
         account.setDailyTxLimit(10);
         account.setDailyTxSumLimit(1000.0);
+        account.setStatus(AccountStatus.ACTIVE);
         when(accountRepository.findByCardNumber("1234567812345678")).thenReturn(account);
 
         ValidationResults results = businessValidator.validate(dto);
 
         assertThat(results.isValid()).isTrue();
         assertThat(results.isBusinessLogicViolation()).isTrue();
-        assertThat(results.getCode()).isEqualTo("51");
+        assertThat(results.getCode()).isEqualTo(ResponseCode.NOT_SUFFICIENT_FUNDS);
+    }
+
+    @Test
+    void shouldRejectInactiveAccount() {
+        TransactionDTO dto = new TransactionDTO("1234567812345678", 10.0, Timestamp.valueOf("2026-05-03 10:00:00"));
+        AccountModel account = new AccountModel();
+        account.setCardNumber("1234567812345678");
+        account.setAmount(100.0);
+        account.setDailyTxLimit(10);
+        account.setDailyTxSumLimit(1000.0);
+        account.setStatus(AccountStatus.BLOCKED);
+        when(accountRepository.findByCardNumber("1234567812345678")).thenReturn(account);
+
+        ValidationResults results = businessValidator.validate(dto);
+
+        assertThat(results.isValid()).isFalse();
+        assertThat(results.getCode()).isEqualTo(ResponseCode.INACTIVE_ACCOUNT);
     }
 
     @Test
@@ -61,6 +80,7 @@ class BusinessValidatorTest {
         account.setDailyTxSumLimit(1000.0);
         account.setDailyTx(0);
         account.setDailyTxSum(0.0);
+        account.setStatus(AccountStatus.ACTIVE);
         when(accountRepository.findByCardNumber("1234567812345678")).thenReturn(account);
 
         ValidationResults results = businessValidator.validate(dto);

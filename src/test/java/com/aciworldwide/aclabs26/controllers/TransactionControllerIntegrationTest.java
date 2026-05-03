@@ -1,6 +1,7 @@
 package com.aciworldwide.aclabs26.controllers;
 
 import com.aciworldwide.aclabs26.entities.AccountModel;
+import com.aciworldwide.aclabs26.entities.AccountStatus;
 import com.aciworldwide.aclabs26.entities.TransactionModel;
 import com.aciworldwide.aclabs26.repository.AccountRepository;
 import com.aciworldwide.aclabs26.repository.TransactionRepository;
@@ -81,8 +82,22 @@ class TransactionControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"cardNumber\":\"1234567812345678\",\"amount\":10.0,\"timestamp\":\"2026-05-03T10:00:00\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code", is("61")))
+                .andExpect(jsonPath("$.code", is("65")))
                 .andExpect(jsonPath("$.businessLogicViolation", is(true)));
+    }
+
+    @Test
+    void shouldRejectBlockedAccount() throws Exception {
+        AccountModel account = accountRepository.findByCardNumber("1234567812345678");
+        account.setStatus(AccountStatus.BLOCKED);
+        accountRepository.save(account);
+
+        mockMvc.perform(post("/transaction")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cardNumber\":\"1234567812345678\",\"amount\":10.0,\"timestamp\":\"2026-05-03T10:00:00\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is("13")))
+                .andExpect(jsonPath("$.valid", is(false)));
     }
 
     @Test
@@ -103,6 +118,7 @@ class TransactionControllerIntegrationTest {
         account.setDailyTxSumLimit(dailyTxSumLimit);
         account.setDailyTx(0);
         account.setDailyTxSum(0.0);
+        account.setStatus(AccountStatus.ACTIVE);
         return account;
     }
 }
