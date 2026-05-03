@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 
 import java.sql.Timestamp;
@@ -19,7 +19,10 @@ public class TransactionDTO {
     private String cardNumber;
 
     @Schema(description = "Transaction amount")
+    @NotNull(message = "Amount is required")
     @Positive(message = "Amount must be greater than zero")
     private Double amount;
+
+    @NotNull(message = "Timestamp is required")
     private Timestamp timestamp;
 }

@@ -1,7 +1,6 @@
 package com.aciworldwide.aclabs26.services;
 
 import com.aciworldwide.aclabs26.dto.TransactionDTO;
-import com.aciworldwide.aclabs26.entities.TransactionEntity;
 import com.aciworldwide.aclabs26.entities.AccountModel;
 import com.aciworldwide.aclabs26.entities.TransactionModel;
 import com.aciworldwide.aclabs26.repository.AccountRepository;
@@ -11,7 +10,6 @@ import org.apache.logging.log4j.Logger;
 import com.aciworldwide.aclabs26.validators.TransactionValidator;
 import com.aciworldwide.aclabs26.validators.ValidationResults;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
