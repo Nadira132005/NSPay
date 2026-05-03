@@ -8,6 +8,7 @@ import com.aciworldwide.aclabs26.repository.TransactionRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.aciworldwide.aclabs26.validators.TransactionValidator;
+import com.aciworldwide.aclabs26.validators.ValidationLogger;
 import com.aciworldwide.aclabs26.validators.ValidationResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,8 @@ public class TransactionService {
     @Autowired
     private TransactionValidator transactionValidator;
     @Autowired
+    private ValidationLogger validationLogger;
+    @Autowired
     private TransactionRepository transactionRepository;
     @Autowired
     private AccountRepository accountRepository;
@@ -28,6 +31,7 @@ public class TransactionService {
 
         logger.info("Processing transaction for card {} and amount {}", transactionDTO.getCardNumber(), transactionDTO.getAmount());
         ValidationResults validationResults = transactionValidator.validate(transactionDTO);
+        validationLogger.log(transactionDTO, validationResults);
         if (!validationResults.isValid()) {
             return validationResults;
         }

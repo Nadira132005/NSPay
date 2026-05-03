@@ -2,6 +2,7 @@ package com.aciworldwide.aclabs26.services;
 
 import com.aciworldwide.aclabs26.dto.AccountDTO;
 import com.aciworldwide.aclabs26.entities.AccountModel;
+import com.aciworldwide.aclabs26.entities.AccountStatus;
 import com.aciworldwide.aclabs26.repository.AccountRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -76,6 +77,7 @@ public class AccountService {
     private AccountModel toAccount(AccountDTO accountDTO) {
         AccountModel account = new AccountModel();
         apply(account, accountDTO);
+        account.setStatus(AccountStatus.ACTIVE);
         return account;
     }
 
