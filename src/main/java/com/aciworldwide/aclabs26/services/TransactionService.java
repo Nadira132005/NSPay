@@ -3,6 +3,7 @@ package com.aciworldwide.aclabs26.services;
 import com.aciworldwide.aclabs26.dto.TransactionDTO;
 import com.aciworldwide.aclabs26.entities.AccountModel;
 import com.aciworldwide.aclabs26.entities.TransactionModel;
+import com.aciworldwide.aclabs26.mappers.TransactionMapper;
 import com.aciworldwide.aclabs26.repository.AccountRepository;
 import com.aciworldwide.aclabs26.repository.TransactionRepository;
 import org.apache.logging.log4j.LogManager;
@@ -23,6 +24,8 @@ public class TransactionService {
     @Autowired
     private ValidationLogger validationLogger;
     @Autowired
+    private TransactionMapper transactionMapper;
+    @Autowired
     private TransactionRepository transactionRepository;
     @Autowired
     private AccountRepository accountRepository;
@@ -36,7 +39,7 @@ public class TransactionService {
             return validationResults;
         }
 
-        TransactionModel transactionModel = new TransactionModel(transactionDTO);
+        TransactionModel transactionModel = transactionMapper.toModel(transactionDTO);
         transactionModel.setReturnCode(validationResults.getCode().getCode());//ResponseCode.NOT_SUFFICIENT_FUNDS.getCode()->"51"
         transactionRepository.save(transactionModel);
         if(validationResults.isBusinessLogicViolation()){
