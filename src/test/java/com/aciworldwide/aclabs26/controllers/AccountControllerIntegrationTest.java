@@ -70,10 +70,18 @@ class AccountControllerIntegrationTest {
     void shouldAddAccount() throws Exception {
         mockMvc.perform(post("/accounts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"cardNumber\":\"9999888877776666\",\"cardHolderName\":\"Bob Stone\",\"amount\":25.0,\"dailyTxLimit\":1000000,\"dailyTxSumLimit\":1000000000.0,\"dailyTx\":0,\"dailyTxSum\":0.0}"))
+                        .content("{\"cardNumber\":\"4242424242424242\",\"cardHolderName\":\"Bob Stone\",\"amount\":25.0,\"dailyTxLimit\":1000000,\"dailyTxSumLimit\":1000000000.0,\"dailyTx\":0,\"dailyTxSum\":0.0}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.cardHolderName", is("Bob Stone")))
-                .andExpect(jsonPath("$.cardNumber", is("9999888877776666")));
+                .andExpect(jsonPath("$.cardNumber", is("4242424242424242")));
+    }
+
+    @Test
+    void shouldRejectAccountWithInvalidLuhnCardNumber() throws Exception {
+        mockMvc.perform(post("/accounts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cardNumber\":\"9999888877776666\",\"cardHolderName\":\"Bob Stone\",\"amount\":25.0,\"dailyTxLimit\":1000000,\"dailyTxSumLimit\":1000000000.0,\"dailyTx\":0,\"dailyTxSum\":0.0}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

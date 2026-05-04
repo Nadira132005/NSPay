@@ -4,6 +4,8 @@ import com.aciworldwide.aclabs26.dto.AccountDTO;
 import com.aciworldwide.aclabs26.entities.AccountModel;
 import com.aciworldwide.aclabs26.entities.AccountStatus;
 import com.aciworldwide.aclabs26.repository.AccountRepository;
+import com.aciworldwide.aclabs26.validators.LuhnValidator;
+import com.aciworldwide.aclabs26.exceptions.ValidationException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +23,9 @@ public class AccountService {
 
     @Autowired
     private AccountRepository accountRepository;
+
+    @Autowired
+    private LuhnValidator luhnValidator;
 
     public ResponseEntity<?> getAllAccounts() {
         logger.info("Fetching all accounts from repository");
@@ -47,6 +52,9 @@ public class AccountService {
 
     public ResponseEntity<?> addAccount(AccountDTO accountDTO) {
         logger.info("Adding account with card number {}", accountDTO.getCardNumber());
+        if (!luhnValidator.isValid(accountDTO.getCardNumber())) {
+            throw new ValidationException("Card number failed Luhn validation");
+        }
         AccountModel createdAccount = accountRepository.save(toAccount(accountDTO));
         return new ResponseEntity<>(createdAccount, new HttpHeaders(), HttpStatus.CREATED);
     }
