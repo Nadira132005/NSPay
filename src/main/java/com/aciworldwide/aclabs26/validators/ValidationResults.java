@@ -15,14 +15,13 @@ public class ValidationResults {
     private final String code;
     private final String message;
 
-public static ValidationResults success( boolean isBusinessLogicViolation, String code, String message) {
-return new ValidationResults(true, isBusinessLogicViolation, code, message);
-}
+    public static ValidationResults success(boolean isBusinessLogicViolation, String code, String message) {
+        return new ValidationResults(true, isBusinessLogicViolation, code, message);
+    }
 
-public static ValidationResults failure(String responseCode, String responseMessage){
-return new ValidationResults(false, responseCode, responseMessage);
-}
-
+    public static ValidationResults failure(String responseCode, String responseMessage) {
+        return new ValidationResults(false, responseCode, responseMessage);
+    }
 
 
 }
