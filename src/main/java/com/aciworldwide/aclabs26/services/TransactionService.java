@@ -8,8 +8,10 @@ import com.aciworldwide.aclabs26.repository.TransactionRepository;
 import com.aciworldwide.aclabs26.validators.TransactionValidator;
 import com.aciworldwide.aclabs26.validators.ValidationResults;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import javax.transaction.Transactional;
+import java.util.List;
 
 @Service
 public class TransactionService {
@@ -21,6 +23,7 @@ public class TransactionService {
     @Autowired
     private AccountRepository accountRepository;
 
+    @Transactional
     public ValidationResults processTransaction(TransactionDTO transactionDTO) {
         ValidationResults validationResults = transactionValidator.validate(transactionDTO);
 
@@ -36,15 +39,25 @@ public class TransactionService {
             return validationResults;
         }
 
-        AccountModel accountModel = accountRepository.findByCardNumber(transactionDTO.getCardNumber());
+        AccountModel accountModel = accountRepository.findAccountByCardNumber(transactionDTO.getCardNumber());
         updateAccount(accountModel, transactionDTO.getAmount());
 
         return validationResults;
 
     }
-private void updateAccount(AccountModel accountModel, double amount){
+
+    private void updateAccount(AccountModel accountModel, double amount){
             accountModel.setAmount(accountModel.getAmount()-amount);
             accountModel.setDailyTx(accountModel.getDailyTx() + 1);
             accountModel.setDailyTxSum(accountModel.getDailyTxSum() + amount);
-}
+    }
+
+    public List<TransactionModel> getAllTransactions() {
+        return (List<TransactionModel>) transactionRepository.findAll();
+    }
+
+
+    public List<TransactionModel> getTransactionsOfAccount(String cardNumber) {
+        return transactionRepository.findAllByCardNumber(cardNumber);
+    }
 }

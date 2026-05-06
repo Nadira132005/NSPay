@@ -6,15 +6,14 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.LockModeType;
-import javax.transaction.Transactional;
-import java.util.Arrays;
-import java.util.List;
+import java.util.UUID;
 
-@Transactional
 @Repository
-public interface AccountRepository extends CrudRepository<AccountModel, Integer> {
+public interface AccountRepository extends CrudRepository<AccountModel, UUID> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    AccountModel findByCardNumber(String cardNumber);
+    AccountModel findAccountByCardNumber(String cardNumber);
+
+    boolean existsAccountByCardNumber(String cardNumber);
 
 }

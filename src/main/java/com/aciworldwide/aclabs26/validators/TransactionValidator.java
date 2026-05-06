@@ -21,7 +21,7 @@ public class TransactionValidator {
         Double amount = transactionDTO.getAmount();
         Timestamp timestamp = transactionDTO.getTimestamp();
 
-        AccountModel accountModel = accountRepository.findByCardNumber(cardNumber);
+        AccountModel accountModel = accountRepository.findAccountByCardNumber(cardNumber);
 
         if (accountModel==null){
             return ValidationResults.failure("99", "Account not found");
@@ -29,6 +29,10 @@ public class TransactionValidator {
 
         if (amount == null){
             return ValidationResults.failure("100", "Amount is null");
+        }
+
+        if (timestamp == null){
+            return ValidationResults.failure("101", "Timestamp is null");
         }
 
         if (accountModel.dailyTxLimitExceeded()){
