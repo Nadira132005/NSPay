@@ -1,0 +1,33 @@
+<div class="login-wrapper">
+    <form #loginForm="ngForm" (ngSubmit)="onSubmit()" class="login">
+
+        <label class="title">
+            <h3 class="welcome">Welcome to  Payments Console</h3>
+            <h5 class="hint">Use your credentials to sign in</h5>
+        </label>
+
+        <div class="login-group">
+
+            <input required class="username"
+                   name="username"
+                   [(ngModel)]="user.name"
+                   type="text"
+                   id="login_username"
+                   placeholder="Username">
+
+            <input required class="password"
+                   name="password"
+                   [(ngModel)]="user.password"
+                   type="password"
+                   id="login_password"
+                   placeholder="Password">
+
+            <button type="submit"
+                    class="btn btn-primary"
+                    [disabled]="loginForm.form.invalid">
+                Login
+            </button>
+        </div>
+
+    </form>
+</div>

@@ -13,7 +13,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,6 +53,32 @@ class TransactionControllerIntegrationTest {
         org.assertj.core.api.Assertions.assertThat(account).isNotNull();
         org.assertj.core.api.Assertions.assertThat(account.getAmount()).isEqualTo(75.0);
         org.assertj.core.api.Assertions.assertThat(transactionRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    void shouldReturnAllTransactions() throws Exception {
+        mockMvc.perform(post("/transaction")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cardNumber\":\"1234567812345678\",\"amount\":25.0,\"timestamp\":\"2026-05-03T10:00:00\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/transactions"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].cardNumber", is("1234567812345678")));
+    }
+
+    @Test
+    void shouldReturnTransactionsByCardNumber() throws Exception {
+        mockMvc.perform(post("/transaction")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cardNumber\":\"1234567812345678\",\"amount\":25.0,\"timestamp\":\"2026-05-03T10:00:00\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/transactions/1234567812345678"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].returnCode", is("00")));
     }
 
     @Test

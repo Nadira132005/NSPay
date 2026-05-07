@@ -1,6 +1,7 @@
 package com.aciworldwide.aclabs26.controllers;
 
 import com.aciworldwide.aclabs26.exceptions.GlobalExceptionHandler;
+import com.aciworldwide.aclabs26.entities.TransactionModel;
 import com.aciworldwide.aclabs26.services.AccountService;
 import com.aciworldwide.aclabs26.services.TransactionService;
 import org.junit.jupiter.api.Test;
@@ -11,9 +12,17 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.sql.Timestamp;
+import java.util.List;
+
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TransactionController.class)
@@ -44,5 +53,29 @@ class TransactionControllerTest {
                         .content("{\"cardNumber\":\"\",\"amount\":2}"))
                 .andExpect(status().isBadRequest());
 
+    }
+
+    @Test
+    void shouldReturnAllTransactions() throws Exception {
+        TransactionModel first = new TransactionModel(1L, "1234567812345678", 25.0, Timestamp.valueOf("2026-05-03 10:00:00"), "00");
+        TransactionModel second = new TransactionModel(2L, "1234567812345678", 10.0, Timestamp.valueOf("2026-05-03 10:05:00"), "51");
+        doReturn(List.of(first, second)).when(transactionService).getAllTransactions();
+
+        mockMvc.perform(get("/transactions"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].cardNumber", is("1234567812345678")))
+                .andExpect(jsonPath("$[1].returnCode", is("51")));
+    }
+
+    @Test
+    void shouldReturnTransactionsByCardNumber() throws Exception {
+        TransactionModel first = new TransactionModel(1L, "1234567812345678", 25.0, Timestamp.valueOf("2026-05-03 10:00:00"), "00");
+        doReturn(List.of(first)).when(transactionService).getTransactionsOfAccount("1234567812345678");
+
+        mockMvc.perform(get("/transactions/1234567812345678"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].amount", is(25.0)));
     }
 }

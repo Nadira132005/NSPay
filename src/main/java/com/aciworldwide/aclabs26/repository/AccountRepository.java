@@ -15,4 +15,5 @@ public interface AccountRepository extends CrudRepository<AccountModel, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     AccountModel findByCardNumber(String cardNumber);
 
+    boolean existsByCardNumber(String cardNumber);
 }

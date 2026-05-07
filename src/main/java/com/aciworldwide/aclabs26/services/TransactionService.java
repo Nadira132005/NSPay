@@ -14,6 +14,8 @@ import com.aciworldwide.aclabs26.validators.ValidationResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
+import java.util.List;
 @Service
 public class TransactionService {
 
@@ -30,6 +32,7 @@ public class TransactionService {
     @Autowired
     private AccountRepository accountRepository;
 
+    @Transactional //Processes the transaction and ensures atomicity.If any step fails, all database changes are rolled back.
     public ValidationResults processTransaction(TransactionDTO transactionDTO) {
 
         logger.info("Processing transaction for card {} and amount {}", transactionDTO.getCardNumber(), transactionDTO.getAmount());
@@ -57,4 +60,11 @@ private void updateAccount(AccountModel accountModel, double amount){
             accountModel.setDailyTxSum(accountModel.getDailyTxSum() + amount);
             accountRepository.save(accountModel);
 }
+public List<TransactionModel> getAllTransactions() {
+        return (List<TransactionModel>) transactionRepository.findAll();
+    }
+
+public List<TransactionModel> getTransactionsOfAccount(String cardNumber) {
+        return transactionRepository.findAllByCardNumber(cardNumber);//created by Spring Data JPA, CrudRepository
+    }
 }

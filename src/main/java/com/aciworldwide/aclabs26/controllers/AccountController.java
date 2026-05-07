@@ -23,7 +23,7 @@ import javax.validation.Valid;
 
 
 @RestController
-@RequestMapping(path = "/accounts")
+@RequestMapping(path = {"/accounts", "/api/accounts"})
 @Tag(name = "Accounts")
 public class AccountController {
 

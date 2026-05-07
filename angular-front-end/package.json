@@ -1,0 +1,39 @@
+{
+  "name": "payments-front-end",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve --proxy-config proxy.conf.json --project payments-front-end",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "~16.0.2",
+    "@angular/cdk": "^16.0.1",
+    "@angular/common": "~16.0.2",
+    "@angular/compiler": "^16.0.2",
+    "@angular/core": "~16.0.2",
+    "@angular/forms": "~16.0.2",
+    "@angular/material": "^16.0.1",
+    "@angular/platform-browser": "~16.0.2",
+    "@angular/platform-browser-dynamic": "~16.0.2",
+    "@angular/router": "~16.0.2",
+    "ag-charts-angular": "^7.3.0",
+    "ag-charts-community": "~7.3.0",
+    "ag-grid-angular": "^29.3.5",
+    "ag-grid-community": "^29.3.5",
+    "angular-gridster2": "16.0.0",
+    "rxjs": "~7.8.1",
+    "sql-formatter": "^12.2.0",
+    "tslib": "^2.5.2",
+    "zone.js": "~0.13.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^16.0.2",
+    "@angular/cli": "^16.0.2",
+    "@angular/compiler-cli": "^16.0.2",
+    "@types/node": "^20.2.1",
+    "typescript": "~5.0.4"
+  }
+}
