@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
@@ -59,7 +60,7 @@ class TransactionControllerTest {
     void shouldReturnAllTransactions() throws Exception {
         TransactionModel first = new TransactionModel(1L, "1234567812345678", 25.0, Timestamp.valueOf("2026-05-03 10:00:00"), "00");
         TransactionModel second = new TransactionModel(2L, "1234567812345678", 10.0, Timestamp.valueOf("2026-05-03 10:05:00"), "51");
-        doReturn(List.of(first, second)).when(transactionService).getAllTransactions();
+        doReturn(Arrays.asList(first, second)).when(transactionService).getAllTransactions();
 
         mockMvc.perform(get("/transactions"))
                 .andExpect(status().isOk())
@@ -71,7 +72,7 @@ class TransactionControllerTest {
     @Test
     void shouldReturnTransactionsByCardNumber() throws Exception {
         TransactionModel first = new TransactionModel(1L, "1234567812345678", 25.0, Timestamp.valueOf("2026-05-03 10:00:00"), "00");
-        doReturn(List.of(first)).when(transactionService).getTransactionsOfAccount("1234567812345678");
+        doReturn(Arrays.asList(first)).when(transactionService).getTransactionsOfAccount("1234567812345678");
 
         mockMvc.perform(get("/transactions/1234567812345678"))
                 .andExpect(status().isOk())

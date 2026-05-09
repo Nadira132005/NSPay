@@ -3,6 +3,7 @@ package com.aciworldwide.aclabs26.services;
 import com.aciworldwide.aclabs26.dto.AccountDTO;
 import com.aciworldwide.aclabs26.entities.AccountModel;
 import com.aciworldwide.aclabs26.entities.AccountStatus;
+import com.aciworldwide.aclabs26.exceptions.ResourceNotFoundException;
 import com.aciworldwide.aclabs26.repository.AccountRepository;
 import com.aciworldwide.aclabs26.validators.LuhnValidator;
 import com.aciworldwide.aclabs26.exceptions.ValidationException;
@@ -36,16 +37,14 @@ public class AccountService {
         logger.info("Fetching account by id {}", id);
         return accountRepository.findById(id)
                 .<ResponseEntity<?>>map(account -> new ResponseEntity<>(account, new HttpHeaders(), HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>("Account with id " + id + " is not found",
-                        new HttpHeaders(), HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResourceNotFoundException("Account with id " + id + " is not found"));
     }
 
     public ResponseEntity<?> getAccountByCardNumber(String cardNumber) {
         logger.info("Fetching account by card number {}", cardNumber);
         AccountModel account = accountRepository.findByCardNumber(cardNumber);
         if (account == null) {
-            return new ResponseEntity<>("Account with card number " + cardNumber + " is not found",
-                    new HttpHeaders(), HttpStatus.NOT_FOUND);
+            throw new ResourceNotFoundException("Account with card number " + cardNumber + " is not found");
         }
         return new ResponseEntity<>(account, new HttpHeaders(), HttpStatus.OK);
     }
@@ -63,8 +62,7 @@ public class AccountService {
         logger.info("Updating account with id {}", id);
         Optional<AccountModel> accountOptional = accountRepository.findById(id);
         if (!accountOptional.isPresent()) {
-            return new ResponseEntity<>("Account with id " + id + " is not found",
-                    new HttpHeaders(), HttpStatus.NOT_FOUND);
+            throw new ResourceNotFoundException("Account with id " + id + " is not found");
         }
 
         AccountModel account = accountOptional.get();
@@ -75,8 +73,7 @@ public class AccountService {
     public ResponseEntity<?> deleteAccount(long id) {
         logger.info("Deleting account with id {}", id);
         if (!accountRepository.existsById(id)) {
-            return new ResponseEntity<>("Account with id " + id + " is not found",
-                    new HttpHeaders(), HttpStatus.NOT_FOUND);
+            throw new ResourceNotFoundException("Account with id " + id + " is not found");
         }
         accountRepository.deleteById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

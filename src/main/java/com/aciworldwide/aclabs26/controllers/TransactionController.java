@@ -1,7 +1,6 @@
 package com.aciworldwide.aclabs26.controllers;
 
 import com.aciworldwide.aclabs26.dto.TransactionDTO;
-import com.aciworldwide.aclabs26.exceptions.ValidationException;
 import com.aciworldwide.aclabs26.entities.TransactionModel;
 import com.aciworldwide.aclabs26.services.TransactionService;
 import com.aciworldwide.aclabs26.validators.ValidationResults;
@@ -15,8 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -35,17 +32,7 @@ public class TransactionController {
 
     @PostMapping({"/transaction", "/api/accounts/transaction"})
     @Operation(summary = "Process a transaction")
-    public ResponseEntity<?> processTransaction(@Valid @RequestBody TransactionDTO transactionDTO,
-                                                BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            String message = bindingResult.getFieldErrors()
-                    .stream()
-                    .map(this::formatFieldError)
-                    .reduce((left, right) -> left + "; " + right)
-                    .orElse("Invalid transaction");
-            throw new ValidationException(message);
-        }
-
+    public ResponseEntity<?> processTransaction(@Valid @RequestBody TransactionDTO transactionDTO) {
         logger.info("Transaction request received for card {}", transactionDTO.getCardNumber());
         ValidationResults validationResults = transactionService.processTransaction(transactionDTO);
         if (!validationResults.isValid()) {
@@ -67,9 +54,5 @@ public class TransactionController {
     public ResponseEntity<List<TransactionModel>> getTransactionsOfAccount(@PathVariable String cardNumber) {
         logger.info("GET /transactions/{} called", cardNumber);
         return ResponseEntity.ok(transactionService.getTransactionsOfAccount(cardNumber));
-    }
-
-    private String formatFieldError(FieldError fieldError) {
-        return fieldError.getField() + ": " + fieldError.getDefaultMessage();
     }
 }

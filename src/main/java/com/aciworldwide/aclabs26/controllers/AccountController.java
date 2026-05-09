@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 
 import javax.validation.Valid;
 
@@ -55,11 +53,7 @@ public class AccountController {
 
     @PostMapping
     @Operation(summary = "Add account")
-    public ResponseEntity<?> addAccount(@Valid @RequestBody AccountDTO accountDTO,
-                                        BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            throw new com.aciworldwide.aclabs26.exceptions.ValidationException(buildValidationMessage(bindingResult));
-        }
+    public ResponseEntity<?> addAccount(@Valid @RequestBody AccountDTO accountDTO) {
         logger.info("POST /accounts called");
         return accountService.addAccount(accountDTO);
     }
@@ -67,11 +61,7 @@ public class AccountController {
     @PutMapping("/{id}")
     @Operation(summary = "Update account")
     public ResponseEntity<?> updateAccount(@PathVariable long id,
-                                           @Valid @RequestBody AccountDTO accountDTO,
-                                           BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            throw new com.aciworldwide.aclabs26.exceptions.ValidationException(buildValidationMessage(bindingResult));
-        }
+                                           @Valid @RequestBody AccountDTO accountDTO) {
         logger.info("PUT /accounts/{} called", id);
         return accountService.updateAccount(id, accountDTO);
     }
@@ -81,17 +71,5 @@ public class AccountController {
     public ResponseEntity<?> deleteAccount(@PathVariable long id) {
         logger.info("DELETE /accounts/{} called", id);
         return accountService.deleteAccount(id);
-    }
-
-    private String buildValidationMessage(BindingResult bindingResult) {
-        return bindingResult.getFieldErrors()
-                .stream()
-                .map(this::formatFieldError)
-                .reduce((left, right) -> left + "; " + right)
-                .orElse("Invalid account");
-    }
-
-    private String formatFieldError(FieldError fieldError) {
-        return fieldError.getField() + ": " + fieldError.getDefaultMessage();
     }
 }
