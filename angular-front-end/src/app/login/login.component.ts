@@ -1,4 +1,5 @@
 import {Component, OnInit} from '@angular/core';
+import {Router} from "@angular/router";
 import {UserService} from "../utils/user.service";
 
 @Component({
@@ -9,14 +10,29 @@ import {UserService} from "../utils/user.service";
 export class LoginComponent implements OnInit {
 
   user: any = {}
+  statusMessage = '';
 
-  constructor(private userService: UserService) { }
+  constructor(
+      private userService: UserService,
+      private router: Router
+  ) { }
 
   onSubmit(){
-    this.userService.loginUser(this.user)
+    this.statusMessage = '';
+    this.userService.loginUser(this.user).subscribe({//asynchronous
+      next: (resData) => {
+        this.userService.toHomePage(resData);
+      },
+      error: () => {
+        this.statusMessage = 'Invalid credentials';
+      }
+    });
   }
 
   ngOnInit(): void {
-    this.userService.toLogin();
+    if (!this.userService.isLoggedIn()) {
+      return;
+    }
+    this.router.navigateByUrl('/dashboard/accounts');
   }
 }

@@ -8,12 +8,16 @@ import { LoginComponent } from './login/login.component';
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {ROUTING} from "./app.routing";
 import {CdkMenuItemCheckbox} from "@angular/cdk/menu";
+import { DashboardComponent } from './dashboard/dashboard.component';
+import { AdminUsersComponent } from './admin-users/admin-users.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     AccountsTableComponent,
-    LoginComponent
+    LoginComponent,
+    DashboardComponent,
+    AdminUsersComponent
   ],
     imports: [
         BrowserModule,

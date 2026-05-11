@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.aciworldwide.aclabs26.enums.UserRole;
 
 import javax.persistence.*;
 
@@ -19,4 +20,14 @@ public class UserModel {
     private long id;
     private String name;
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    private UserRole role = UserRole.User;
+
+    @PrePersist //just before insertion
+    public void applyDefaultRole() {
+        if (role == null) {
+            role = UserRole.User;
+        }
+    }
 }

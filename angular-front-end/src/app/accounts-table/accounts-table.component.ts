@@ -1,10 +1,10 @@
 import {Component} from '@angular/core';
 import {AccountModel} from "../models/account-model";
 import {FrontEndService} from "../utils/front-end.service";
-import {Router} from "@angular/router";
 import {TransactionModel} from "../models/transaction-model";
 import {SelectionModel} from "@angular/cdk/collections";
 import {forkJoin} from "rxjs";
+import {UserService} from "../utils/user.service";
 
 @Component({
     selector: 'app-accounts-table',
@@ -14,7 +14,7 @@ import {forkJoin} from "rxjs";
 export class AccountsTableComponent {
 
     constructor(private frontEndService: FrontEndService,
-                private router: Router) {
+                private userService: UserService) {
     }
 
     displayedColumnsAccounts: string[] =
@@ -48,7 +48,7 @@ export class AccountsTableComponent {
     }
 
     logOut() {
-        this.router.navigate(['']);
+        this.userService.logout();
     }
 
     selection = new SelectionModel<any>(true, []);

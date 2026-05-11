@@ -1,0 +1,16 @@
+<div class="dashboard">
+    <aside class="sidebar">
+        <h1>Dashboard</h1>
+        <p class="subtitle">Choose where you want to go next.</p>
+
+        <nav class="panel">
+            <a routerLink="/dashboard/accounts">Accounts page</a>
+            <a *ngIf="isAdmin()" routerLink="/dashboard/users">Create users</a>
+            <button type="button" class="logout-button" (click)="logOut()">Log Out</button>
+        </nav>
+    </aside>
+
+    <main class="content">
+        <router-outlet></router-outlet>
+    </main>
+</div>

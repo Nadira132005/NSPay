@@ -29,13 +29,6 @@
             (click)="deleteSelectedAccount(this.selection.selected)">
         Delete
     </button>
-
-
-    <button
-            class="demo-button"
-            (click)="logOut()">
-        Log Out
-    </button>
 </div>
 
 <table mat-table [dataSource]="accountsData" class="mat-elevation-z8" *ngIf="isAccountsSelected">

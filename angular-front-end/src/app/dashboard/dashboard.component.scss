@@ -1,0 +1,50 @@
+.dashboard {
+    display: flex;
+    font-family: Arial, sans-serif;
+}
+
+.sidebar {
+    width: 260px;
+    padding: 32px 16px;
+    border-right: 1px solid #ddd;
+    background: #f8fafc;
+}
+
+.content {
+    flex: 1;
+    padding: 32px;
+}
+
+.logout-button {
+    margin-top: 12px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.subtitle {
+    margin: 8px 0 20px;
+    color: #444;
+}
+
+.panel {
+    display: grid;
+    gap: 12px;
+}
+
+.panel a,
+.panel button,
+.logout-button {
+    background: #1d4ed8;
+    color: #fff;
+    text-align: center;
+    border: none;
+    border-radius: 6px;
+    padding: 0 12px;
+    min-height: 40px;
+    font: inherit;
+    cursor: pointer;
+    text-decoration: none;
+}
