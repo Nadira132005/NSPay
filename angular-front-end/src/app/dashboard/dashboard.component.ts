@@ -7,6 +7,7 @@ import { UserService } from '../utils/user.service';
     styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent {
+    logoutConfirmOpen = false;
     constructor(
         private userService: UserService
     ) {
@@ -16,7 +17,16 @@ export class DashboardComponent {
         return this.userService.getCurrentRole() === 'Admin';
     }
 
-    logOut() {
+    openLogoutConfirm() {
+        this.logoutConfirmOpen = true;
+    }
+
+    closeLogoutConfirm() {
+        this.logoutConfirmOpen = false;
+    }
+
+    confirmLogout() {
+        this.logoutConfirmOpen = false;
         this.userService.logout();
     }
 }

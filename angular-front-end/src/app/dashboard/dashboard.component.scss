@@ -48,3 +48,36 @@ h1 {
     cursor: pointer;
     text-decoration: none;
 }
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    display: grid;
+    place-items: center;
+
+}
+
+.modal {
+    width: min(100%, 420px);
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.2);
+}
+.modal-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.modal button {
+    min-height: 40px;
+    border-radius: 6px;
+    background: #1d4ed8;
+    color: #fff;
+}
+
+.modal-actions .secondary {
+    background: #e5e7eb;
+    color: #111827;
+}

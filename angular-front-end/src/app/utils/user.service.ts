@@ -6,8 +6,7 @@ import {Observable} from "rxjs";
 
 @Injectable({providedIn: 'root'})
 export class UserService {
-    returnUrl: string = "accounts";
-    loginPage: string = "login";
+    private readonly tokenCookieName = 'auth_token';
 
     constructor(
         private http: HttpClient,
@@ -16,7 +15,7 @@ export class UserService {
     }
 
     toLogin() {
-        this.router.navigate([this.loginPage])
+        this.router.navigateByUrl('/login')
     }
 
     loginUser(userData: UserModel): Observable<LoginResponseModel> {//asynchronous. to subscribe to
@@ -31,28 +30,86 @@ export class UserService {
     }
 
     toHomePage(resData: LoginResponseModel) {
-        window.sessionStorage.setItem("token", resData.token)
-        window.sessionStorage.setItem("userId", String(resData.userId))
-        window.sessionStorage.setItem("role", resData.role)
+        this.setCookie(this.tokenCookieName, resData.token, 1);
         this.router.navigateByUrl('/dashboard/accounts')// or navigate(['dashboard', 'accounts']);
     }
 
     getCurrentRole(): UserRole | null {
-        return window.sessionStorage.getItem("role") as UserRole | null;
+        const token = this.getAuthToken();
+        if (!token || this.isJwtExpired(token)) {
+            return null;
+        }
+        const payload = this.decodeJwtPayload(token);
+        return (payload?.role as UserRole | undefined) ?? null;
     }
 
     isLoggedIn(): boolean {
-        return !!window.sessionStorage.getItem("token");//!(boolean value inverted)
+        const token = this.getAuthToken();
+        return !!token && !this.isJwtExpired(token);//!(boolean value inverted)
     }
 
-    clearSession() {
-        window.sessionStorage.removeItem("token");
-        window.sessionStorage.removeItem("userId");
-        window.sessionStorage.removeItem("role");
+    getAuthToken(): string | null {
+        return this.getCookie(this.tokenCookieName);
     }
 
     logout() {
-        this.clearSession();
+        this.deleteCookie(this.tokenCookieName);
         this.router.navigateByUrl('/');
     }
+
+    private setCookie(name: string, val: string, days: number) {
+        const date = new Date();
+        const value = val;
+        // Set it expire in the requested number of days
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+
+        // Set it
+        document.cookie = name+"="+value+"; expires="+date.toUTCString()+"; path=/";
+    }
+
+    private getCookie(name: string): string | null {
+        const value = "; " + document.cookie;
+        const parts = value.split("; " + name + "=");
+
+        if (parts.length == 2) {
+            return parts.pop()?.split(";").shift() ?? null;
+        }
+        return null;
+    }
+
+    private deleteCookie(name: string): void {
+        const date = new Date();
+        // Set it expire in -1 days
+        date.setTime(date.getTime() + (-1 * 24 * 60 * 60 * 1000));
+
+        // Set it
+        document.cookie = name+"=; expires="+date.toUTCString()+"; path=/";
+    }
+
+    private decodeJwtPayload(token: string): any | null {
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+            return null;
+        }
+        try {
+            const payload = this.normalizeBase64(parts[1]);
+            return JSON.parse(atob(payload));
+        } catch (error) {
+            return null;
+        }
+    }
+
+    private normalizeBase64(value: string): string {
+        const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+        const padding = base64.length % 4;
+        return padding === 0 ? base64 : base64 + '='.repeat(4 - padding);
+    }
+    private isJwtExpired(token: string): boolean {
+        const payload = this.decodeJwtPayload(token);
+        if (!payload?.exp) {
+            return false;
+        }
+        return Date.now() >= Number(payload.exp) * 1000;//in seconds
+    }
+
 }

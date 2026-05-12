@@ -6,11 +6,22 @@
         <nav class="panel">
             <a routerLink="/dashboard/accounts">Accounts page</a>
             <a *ngIf="isAdmin()" routerLink="/dashboard/users">Create users</a>
-            <button type="button" class="logout-button" (click)="logOut()">Log Out</button>
+            <button type="button" class="logout-button" (click)="openLogoutConfirm()">Log Out</button>
         </nav>
     </aside>
 
     <main class="content">
         <router-outlet></router-outlet>
     </main>
+
+    <div class="modal-backdrop" *ngIf="logoutConfirmOpen">
+        <div class="modal">
+            <h2>Confirm logout</h2>
+            <p>Ești sigur că vrei să părăsești sesiunea?</p>
+            <div class="modal-actions">
+                <button type="button" class="secondary" (click)="closeLogoutConfirm()">Cancel</button>
+                <button type="button" (click)="confirmLogout()">Confirm</button>
+            </div>
+        </div>
+    </div>
 </div>

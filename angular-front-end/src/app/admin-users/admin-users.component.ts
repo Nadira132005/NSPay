@@ -19,10 +19,6 @@ export class AdminUsersComponent {
     constructor(private userService: UserService) {
     }
 
-    logOut() {
-        this.userService.logout();
-    }
-
     createUser() {
         this.userService.createUser(this.user).subscribe({
             next: () => {

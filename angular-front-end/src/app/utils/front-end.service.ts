@@ -16,10 +16,10 @@ export class FrontEndService {
     }
 
     getTransactions(): Observable<any> {
-        return this._httpClient.get<any>('/api/transactions/');
+        return this._httpClient.get<any>('/api/accounts/transactions/');
     }
 
     getTransactionsOfAccount(account:AccountModel): Observable<any> {
-        return this._httpClient.get<any>('/api/transactions/' + account.cardNumber);
+        return this._httpClient.get<any>('/api/accounts/transactions/' + account.cardNumber);
     }
 }

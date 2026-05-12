@@ -6,7 +6,7 @@ export const authorizationGuard: CanActivateFn = (route: ActivatedRouteSnapshot)
   const userService = inject(UserService);
   const router = inject(Router);
   const requiredRoles = route.data?.roles as string[] | undefined;
-  const token = window.sessionStorage.getItem('token');
+  const token = userService.isLoggedIn() ? userService.getAuthToken() : null;
   const currentRole = userService.getCurrentRole();
 
   if (!token) {

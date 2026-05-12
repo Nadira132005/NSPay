@@ -11,6 +11,7 @@ public interface UserRepository extends CrudRepository<UserModel, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     UserModel findUserModelByNameAndPassword(String name, String password);
 
+    UserModel findByName(String name);
     boolean existsByName(String name);
 
 }
