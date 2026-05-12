@@ -30,3 +30,13 @@ table {
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+.status-success {
+  color: green;
+  font-weight: 600;
+}
+
+.status-error {
+  color: red;
+  font-weight: 600;
+}

@@ -3,6 +3,7 @@ import com.aciworldwide.aclabs26.services.JwtService;
 import io.jsonwebtoken.Claims;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import javax.servlet.FilterChain;
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @Component
+@ConditionalOnProperty(prefix = "app.jwt", name = "filter-enabled", havingValue = "true", matchIfMissing = true)//// Loads this component only if app.jwt.filter-enabled is 'true'
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String AUTH_TOKEN_COOKIE = "auth_token";

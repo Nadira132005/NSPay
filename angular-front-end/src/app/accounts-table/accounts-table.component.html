@@ -58,7 +58,9 @@
 <table mat-table [dataSource]="transactionsData" class="mat-elevation-z8" *ngIf="isTransactionsSelected">
     <ng-container [matColumnDef]="column" *ngFor="let column of displayedColumnsTransactions">
         <th mat-header-cell *matHeaderCellDef> {{ column }}</th>
-        <td mat-cell *matCellDef="let emp"> {{ emp[column] }}</td>
+        <td mat-cell *matCellDef="let emp" [ngClass]="column === 'returnCode' ? getTransactionStatusClass(emp[column]) : ''">
+            {{ column === 'returnCode' ? getTransactionStatusLabel(emp[column]) : emp[column] }}
+        </td>
     </ng-container>
     <tr mat-header-row *matHeaderRowDef="displayedColumnsTransactions"></tr>
     <tr mat-row *matRowDef="let emprow; columns: displayedColumnsTransactions;"></tr>

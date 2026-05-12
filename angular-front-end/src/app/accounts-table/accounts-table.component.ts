@@ -1,7 +1,11 @@
 import {Component} from '@angular/core';
 import {AccountModel} from "../models/account-model";
 import {FrontEndService} from "../utils/front-end.service";
-import {TransactionModel} from "../models/transaction-model";
+import {
+    TransactionModel,
+    TRANSACTION_STATUS_LABELS,
+    TRANSACTION_SUCCESS_CODE
+} from "../models/transaction-model";
 import {SelectionModel} from "@angular/cdk/collections";
 import {forkJoin} from "rxjs";
 import {UserService} from "../utils/user.service";
@@ -28,6 +32,16 @@ export class AccountsTableComponent {
 
     accountsData: AccountModel[] = [];
     transactionsData: TransactionModel[] = [];
+
+    getTransactionStatusLabel(returnCode: string | number): string {
+        const code = String(returnCode);
+        return TRANSACTION_STATUS_LABELS[code] ?? code;
+    }
+
+    getTransactionStatusClass(returnCode: string | number): string {
+        const code = String(returnCode);
+        return code === TRANSACTION_SUCCESS_CODE ? 'status-success' : 'status-error';
+    }
 
     showTransactionData() {
         this.frontEndService.getTransactions().subscribe(data => {
