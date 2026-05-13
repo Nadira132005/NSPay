@@ -20,6 +20,7 @@ public class UserModel {
     private long id;
     private String name;
     private String password;
+    private Long accountId;
 
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.User;

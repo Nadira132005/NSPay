@@ -5,6 +5,7 @@ export interface UserModel {
     name: string;
     password: string;
     role?: UserRole;
+    accountId?: number | null;
 }
 
 export interface LoginResponseModel {
@@ -12,4 +13,5 @@ export interface LoginResponseModel {
     userId: number;
     role: UserRole;
     name: string;
+    accountCardNumber?: string | null;
 }

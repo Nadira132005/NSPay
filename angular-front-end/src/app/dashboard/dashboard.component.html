@@ -4,8 +4,9 @@
         <p class="subtitle">Choose where you want to go next.</p>
 
         <nav class="panel">
-            <a routerLink="/dashboard/accounts">Accounts page</a>
-            <a *ngIf="isAdmin()" routerLink="/dashboard/users">Create users</a>
+            <a routerLink="/dashboard/accounts">Account page</a>
+            <a routerLink="/dashboard/transactions">Transaction page</a>
+            <a *ngIf="isAdmin()" routerLink="/dashboard/admin">Admin page</a>
             <button type="button" class="logout-button" (click)="openLogoutConfirm()">Log Out</button>
         </nav>
     </aside>

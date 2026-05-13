@@ -26,13 +26,23 @@ public class JwtService {
     }
 
     public String generateToken(UserModel userModel) {
+        return generateToken(userModel, null);
+    }
+
+    public String generateToken(UserModel userModel, String accountCardNumber) {
         long now = System.currentTimeMillis();
-        return Jwts.builder()
+        io.jsonwebtoken.JwtBuilder builder = Jwts.builder()
                 .setSubject(userModel.getName())
                 .claim("userId", userModel.getId())
                 .claim("role", userModel.getRole() == null ? "User" : userModel.getRole().name())
                 .setIssuedAt(new Date(now))
-                .setExpiration(new Date(now + expirationMs))
+                .setExpiration(new Date(now + expirationMs));
+
+        if (accountCardNumber != null) {
+            builder.claim("accountCardNumber", accountCardNumber);
+        }
+
+        return builder
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
     }

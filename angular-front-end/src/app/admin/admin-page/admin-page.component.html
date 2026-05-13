@@ -1,0 +1,17 @@
+<div class="admin-shell">
+    <div class="hero">
+        <p class="section-label">Admin page</p>
+        <h1>Platform administration</h1>
+        <p class="subtitle">Manage accounts and users, then inspect the full transaction history.</p>
+    </div>
+
+    <nav class="tabs">
+        <a routerLink="accounts" routerLinkActive="active">All accounts</a>
+        <a routerLink="transactions" routerLinkActive="active">All transactions</a>
+        <a routerLink="users" routerLinkActive="active">All users</a>
+    </nav>
+
+    <section class="tab-panel">
+        <router-outlet></router-outlet>
+    </section>
+</div>

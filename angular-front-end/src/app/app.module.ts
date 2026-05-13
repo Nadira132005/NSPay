@@ -9,7 +9,11 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {ROUTING} from "./app.routing";
 import {CdkMenuItemCheckbox} from "@angular/cdk/menu";
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { AdminUsersComponent } from './admin-users/admin-users.component';
+import { AdminUsersComponent } from './admin/admin-users/admin-users.component';
+import { AdminPageComponent } from './admin/admin-page/admin-page.component';
+import { AdminAccountsComponent } from './admin/admin-accounts/admin-accounts.component';
+import { AdminPagePanelComponent } from './admin/admin-page-panel/admin-page-panel.component';
+import { TransactionCreateComponent } from './transactions/transaction-create/transaction-create.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +21,11 @@ import { AdminUsersComponent } from './admin-users/admin-users.component';
     AccountsTableComponent,
     LoginComponent,
     DashboardComponent,
-    AdminUsersComponent
+    AdminUsersComponent,
+    AdminPageComponent,
+    AdminAccountsComponent,
+    AdminPagePanelComponent,
+    TransactionCreateComponent
   ],
     imports: [
         BrowserModule,

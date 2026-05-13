@@ -29,6 +29,25 @@ export class UserService {
         return this.http.post('/api/users/', userData, {headers, responseType: 'text'});
     }
 
+    updateUser(id: number, userData: UserModel) {
+        const headers = new HttpHeaders({
+            'userRole': this.getCurrentRole() ?? ''
+        });
+        return this.http.put(`/api/users/${id}`, userData, {headers});
+    }
+
+    getUsers(): Observable<UserModel[]> {
+        return this.http.get<UserModel[]>('/api/users/');
+    }
+
+    getCurrentUser(): Observable<UserModel> {
+        return this.http.get<UserModel>('/api/users/me');
+    }
+
+    deleteUser(id: number): Observable<void> {
+        return this.http.delete<void>(`/api/users/${id}`);
+    }
+
     toHomePage(resData: LoginResponseModel) {
         this.setCookie(this.tokenCookieName, resData.token, 1);
         this.router.navigateByUrl('/dashboard/accounts')// or navigate(['dashboard', 'accounts']);
@@ -41,6 +60,24 @@ export class UserService {
         }
         const payload = this.decodeJwtPayload(token);
         return (payload?.role as UserRole | undefined) ?? null;
+    }
+
+    getCurrentUserName(): string | null {
+        const token = this.getAuthToken();
+        if (!token || this.isJwtExpired(token)) {
+            return null;
+        }
+        const payload = this.decodeJwtPayload(token);
+        return (payload?.sub as string | undefined) ?? null;
+    }
+
+    getCurrentAccountCardNumber(): string | null {
+        const token = this.getAuthToken();
+        if (!token || this.isJwtExpired(token)) {
+            return null;
+        }
+        const payload = this.decodeJwtPayload(token);
+        return (payload?.accountCardNumber as string | undefined) ?? null;
     }
 
     isLoggedIn(): boolean {

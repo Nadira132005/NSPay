@@ -5,12 +5,20 @@ import com.aciworldwide.aclabs26.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import javax.servlet.http.HttpServletRequest; //validated JWT, not from a header that client could fake
+
+import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/users")
@@ -24,10 +32,46 @@ public class UserController {
             @RequestBody UserModel userModel,
             HttpServletRequest request //access to current HTTP request context
     ) {
+        assertAdmin(request);
+        return userService.createUser(userModel);
+    }
+
+    @GetMapping({"", "/"})
+    public ResponseEntity<List<UserModel>> getUsers(HttpServletRequest request) {
+        assertAdmin(request);
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserModel> getCurrentUser(HttpServletRequest request) {
+        String currentName = (String) request.getAttribute("authenticatedName");
+        if (currentName == null || currentName.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current user is not available");
+        }
+        return ResponseEntity.ok(userService.getCurrentUser(currentName));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable long id, HttpServletRequest request) {
+        assertAdmin(request);
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public UserModel updateUser(
+            @PathVariable long id,
+            @RequestBody UserModel userModel,
+            HttpServletRequest request
+    ) {
+        assertAdmin(request);
+        return userService.updateUser(id, userModel);
+    }
+
+    private void assertAdmin(HttpServletRequest request) {
         String currentRole = (String) request.getAttribute("authenticatedRole");
         if (!"Admin".equals(currentRole)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only Admin can create users");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only Admin can manage users");
         }
-        return userService.createUser(userModel);
     }
 }

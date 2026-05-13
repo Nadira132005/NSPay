@@ -1,67 +1,53 @@
-<div class="demo-button-container">
-    <button
-            [disabled]="isAccountsSelected"
-            class="demo-button"
-            (click)="showAccountsData()">
-        Get Accounts
-    </button>
-    <button
-            [disabled]="isTransactionsSelected"
-            class="demo-button"
-            (click)="showTransactionData()">
-        Get All Transactions
-    </button>
+<div class="account-page">
+    <div class="hero">
+        <p class="section-label">Account page</p>
+        <h1>{{ currentUserName || 'Account' }}</h1>
+        <p class="subtitle">Your account details.</p>
+    </div>
 
-    <button
-            [disabled]="!selection.hasValue()"
-            class="demo-button"
-            (click)="showTransactionDataByAccount(this.selection.selected)">
-        Show Transactions
-    </button>
+    <section class="account-card" *ngIf="currentAccount; else emptyState">
+        <div class="identity">
+            <div>
+                <span class="label">Username</span>
+                <strong>{{ currentUserName || currentAccount.cardHolderName }}</strong>
+            </div>
+            <div>
+                <span class="label">Card holder</span>
+                <strong>{{ currentAccount.cardHolderName }}</strong>
+            </div>
+        </div>
 
-    <button
-            class="demo-button"
-            (click)="createTransaction(this.selection.selected)">
-        Create Transaction
-    </button>
-    <button
-            class="demo-button"
-            (click)="deleteSelectedAccount(this.selection.selected)">
-        Delete
-    </button>
+        <div class="grid">
+            <div>
+                <span>Card number</span>
+                <strong>{{ currentAccount.cardNumber }}</strong>
+            </div>
+            <div>
+                <span>Amount</span>
+                <strong>{{ currentAccount.amount }}</strong>
+            </div>
+            <div>
+                <span>Daily tx limit</span>
+                <strong>{{ currentAccount.dailyTxLimit }}</strong>
+            </div>
+            <div>
+                <span>Daily tx sum limit</span>
+                <strong>{{ currentAccount.dailyTxSumLimit }}</strong>
+            </div>
+            <div>
+                <span>Daily tx</span>
+                <strong>{{ currentAccount.dailyTx }}</strong>
+            </div>
+            <div>
+                <span>Daily tx sum</span>
+                <strong>{{ currentAccount.dailyTxSum }}</strong>
+            </div>
+        </div>
+    </section>
+
+    <ng-template #emptyState>
+        <section class="account-card empty">
+            <p>{{ statusMessage || 'No account is available.' }}</p>
+        </section>
+    </ng-template>
 </div>
-
-<table mat-table [dataSource]="accountsData" class="mat-elevation-z8" *ngIf="isAccountsSelected">
-    <ng-container [matColumnDef]="column" *ngFor="let column of displayedColumnsAccounts">
-        <th mat-header-cell *matHeaderCellDef>
-            <input type="checkbox"
-                    *ngIf="column == 'id'"
-                    (change)="masterToggle()"
-                    [checked]="selection.hasValue() && isAllSelected()"
-                    [indeterminate]="selection.hasValue() && !isAllSelected()">
-            {{ column }}
-        </th>
-        <td mat-cell *matCellDef="let row">
-            <input type="checkbox"
-                    *ngIf="column == 'id'"
-                    (click)="$event.stopPropagation()"
-                    (change)="$event ? selection.toggle(row) : null"
-                    [checked]="selection.isSelected(row)">
-            {{ row[column] }}
-        </td>
-    </ng-container>
-    <tr mat-header-row *matHeaderRowDef="displayedColumnsAccounts"></tr>
-    <tr mat-row *matRowDef="let emprow; columns: displayedColumnsAccounts;"></tr>
-</table>
-
-
-<table mat-table [dataSource]="transactionsData" class="mat-elevation-z8" *ngIf="isTransactionsSelected">
-    <ng-container [matColumnDef]="column" *ngFor="let column of displayedColumnsTransactions">
-        <th mat-header-cell *matHeaderCellDef> {{ column }}</th>
-        <td mat-cell *matCellDef="let emp" [ngClass]="column === 'returnCode' ? getTransactionStatusClass(emp[column]) : ''">
-            {{ column === 'returnCode' ? getTransactionStatusLabel(emp[column]) : emp[column] }}
-        </td>
-    </ng-container>
-    <tr mat-header-row *matHeaderRowDef="displayedColumnsTransactions"></tr>
-    <tr mat-row *matRowDef="let emprow; columns: displayedColumnsTransactions;"></tr>
-</table>

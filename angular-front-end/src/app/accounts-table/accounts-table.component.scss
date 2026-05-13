@@ -1,42 +1,74 @@
-table {
-  width: 100%;
+.account-page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px;
 }
 
-.full-width {
-  font-size: 14px;
-  width: 100%;
-}
-
-.demo-button-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+.hero {
   margin-bottom: 16px;
 }
 
-
-.demo-button {
-  background: #1d4ed8;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  min-height: 40px;
-  padding: 0 12px;
-  font: inherit;
-  cursor: pointer;
+.section-label {
+  margin: 0 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #666;
 }
 
-.demo-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.status-success {
-  color: green;
+h1 {
+  margin: 0;
+  font-size: 28px;
   font-weight: 600;
 }
 
-.status-error {
-  color: red;
+.subtitle {
+  margin: 6px 0 0;
+  color: #555;
+}
+
+.account-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 18px;
+  background: #fff;
+}
+
+.identity {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #ddd;
+}
+
+.label,
+.account-card span {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #666;
+}
+
+.identity strong,
+.grid strong {
+  display: block;
+  word-break: break-word;
   font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  gap: 12px;
+}
+
+.grid > div {
+  padding: 4px 0;
+}
+
+.empty {
+  color: #555;
 }
