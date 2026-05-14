@@ -19,7 +19,7 @@
         </div>
     </section>
 
-    <table mat-table [dataSource]="filteredAccounts" class="mat-elevation-z8">
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
         <ng-container matColumnDef="id">
             <th mat-header-cell *matHeaderCellDef> id </th>
             <td mat-cell *matCellDef="let row"> {{ row.id }} </td>
@@ -69,10 +69,21 @@
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
 
-    <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+    <mat-paginator [length]="dataSource.filteredData.length" [pageSize]="pageSize" showFirstLastButtons></mat-paginator>
+
+    <div class="page-size-control">
+        <label>
+            <span>Items per page</span>
+            <select [(ngModel)]="pageSize" [ngModelOptions]="{standalone: true}" (ngModelChange)="onPageSizeChange()">
+                <option [ngValue]="5">5</option>
+                <option [ngValue]="10">10</option>
+                <option [ngValue]="25">25</option>
+            </select>
+        </label>
+    </div>
 
     <p class="status" *ngIf="statusMessage">{{ statusMessage }}</p>
 
-    <p class="status" *ngIf="accountsData.length === 0">No accounts.</p>
-    <p class="status" *ngIf="accountsData.length > 0 && filteredAccounts.length === 0">No accounts match the current filters.</p>
+    <p class="status" *ngIf="dataSource.data.length === 0">No accounts.</p>
+    <p class="status" *ngIf="dataSource.data.length > 0 && dataSource.filteredData.length === 0">No accounts match the current filters.</p>
 </div>

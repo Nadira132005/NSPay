@@ -22,6 +22,7 @@ export class AnalystPagePanelComponent implements OnInit, AfterViewInit {
 
     dataSource = new MatTableDataSource<AnalystTransactionRow>([]);
     accountsData: AccountModel[] = [];
+    pageSize = 10;
     displayedColumns: string[] = ['id', 'timestamp', 'cardHolderName', 'cardNumber', 'amount', 'returnCode'];
     loaded = false;
     statusMessage = '';
@@ -102,6 +103,21 @@ export class AnalystPagePanelComponent implements OnInit, AfterViewInit {
     ngAfterViewInit(): void {
         this.dataSource.paginator = this.paginator;
         this.dataSource.sort = this.sort;
+    }
+
+    onPageSizeChange() {
+        const paginator = this.dataSource.paginator;
+        if (!paginator) {
+            return;
+        }
+
+        paginator.pageIndex = 0;
+        paginator.pageSize = this.pageSize;
+        paginator.page.next({
+            pageIndex: 0,
+            pageSize: this.pageSize,
+            length: this.dataSource.filteredData.length
+        });
     }
 
     getTransactionStatusLabel(returnCode: string | number): string {

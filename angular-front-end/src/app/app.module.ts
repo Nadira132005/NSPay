@@ -1,5 +1,6 @@
 import { NgModule} from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppComponent } from './app.component';
 import { AccountsTableComponent } from './accounts-table/accounts-table.component';
 import {MatTableModule} from '@angular/material/table';
@@ -40,6 +41,7 @@ import { AnalystPagePanelComponent } from './analyst/analyst-page-panel/analyst-
   ],
     imports: [
         BrowserModule,
+        BrowserAnimationsModule,
         MatTableModule,
         MatPaginatorModule,
         MatSortModule,

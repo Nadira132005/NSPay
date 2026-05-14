@@ -23,6 +23,7 @@ export class AnalystUsersComponent implements OnInit, AfterViewInit {
 
     dataSource = new MatTableDataSource<AnalystUserRow>([]);
     accountsData: AccountModel[] = [];
+    pageSize = 10;
     displayedColumns: string[] = ['id', 'name', 'role', 'account'];
     roles: string[] = ['Admin', 'User', 'Analyst'];
     roleFilter = 'all';
@@ -69,6 +70,21 @@ export class AnalystUsersComponent implements OnInit, AfterViewInit {
     ngAfterViewInit(): void {
         this.dataSource.paginator = this.paginator;
         this.dataSource.sort = this.sort;
+    }
+
+    onPageSizeChange() {
+        const paginator = this.dataSource.paginator;
+        if (!paginator) {
+            return;
+        }
+
+        paginator.pageIndex = 0;
+        paginator.pageSize = this.pageSize;
+        paginator.page.next({
+            pageIndex: 0,
+            pageSize: this.pageSize,
+            length: this.dataSource.filteredData.length
+        });
     }
 
     applyFilters() {

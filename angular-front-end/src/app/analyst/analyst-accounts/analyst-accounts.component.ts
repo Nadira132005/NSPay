@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
 import { AccountModel } from '../../models/account-model';
 import { FrontEndService } from '../../utils/front-end.service';
 
@@ -7,9 +9,12 @@ import { FrontEndService } from '../../utils/front-end.service';
     templateUrl: './analyst-accounts.component.html',
     styleUrls: ['./analyst-accounts.component.scss']
 })
-export class AnalystAccountsComponent implements OnInit {
+export class AnalystAccountsComponent implements OnInit, AfterViewInit {
+    @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+    dataSource = new MatTableDataSource<AccountModel>([]);
     accountsData: AccountModel[] = [];
-    filteredAccounts: AccountModel[] = [];
+    pageSize = 10;
     displayedColumns: string[] = [
         'id',
         'cardNumber',
@@ -31,18 +36,44 @@ export class AnalystAccountsComponent implements OnInit {
     constructor(private frontEndService: FrontEndService) {}
 
     ngOnInit(): void {
+        this.dataSource.filterPredicate = (account, filter) => {
+            const parsed = JSON.parse(filter) as { status: string; amountFrom: number; amountTo: number };
+            const rowStatus = account.status || 'ACTIVE';
+            const amount = Number(account.amount);
+            return (parsed.status === 'all' || rowStatus === parsed.status)
+                && amount >= Number(parsed.amountFrom)
+                && amount <= Number(parsed.amountTo);
+        };
         this.statusFilter = 'all';
         this.loadAccounts();
     }
 
-    applyFilters() {
-        this.filteredAccounts = this.accountsData.filter(account => {
-            const rowStatus = account.status || 'ACTIVE';
-            const amount = Number(account.amount);
-            return (this.statusFilter === 'all' || rowStatus === this.statusFilter)
-                && amount >= Number(this.amountFrom)
-                && amount <= Number(this.amountTo);
+    ngAfterViewInit(): void {
+        this.dataSource.paginator = this.paginator;
+    }
+
+    onPageSizeChange() {
+        const paginator = this.dataSource.paginator;
+        if (!paginator) {
+            return;
+        }
+
+        paginator.pageIndex = 0;
+        paginator.pageSize = this.pageSize;
+        paginator.page.next({
+            pageIndex: 0,
+            pageSize: this.pageSize,
+            length: this.dataSource.filteredData.length
         });
+    }
+
+    applyFilters() {
+        this.dataSource.filter = JSON.stringify({
+            status: this.statusFilter,
+            amountFrom: this.amountFrom,
+            amountTo: this.amountTo
+        });
+        this.dataSource.paginator?.firstPage();
     }
 
     onAmountFromChange(value: string | number) {
@@ -70,6 +101,7 @@ export class AnalystAccountsComponent implements OnInit {
                     ...account,
                     status: account.status || 'ACTIVE'
                 }));
+                this.dataSource.data = this.accountsData;
 
                 const amounts = accounts.map(account => Number(account.amount)).filter(amount => !Number.isNaN(amount));
                 const min = amounts.length ? Math.min(...amounts) : 0;

@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
 import { AccountModel } from '../../models/account-model';
 import { FrontEndService } from '../../utils/front-end.service';
 import { UserService } from '../../utils/user.service';
@@ -13,9 +15,13 @@ import {
     templateUrl: './transaction-create.component.html',
     styleUrls: ['./transaction-create.component.scss']
 })
-export class TransactionCreateComponent implements OnInit {
+export class TransactionCreateComponent implements OnInit, AfterViewInit {
+    @ViewChild(MatPaginator) paginator!: MatPaginator;
+
     currentAccount: AccountModel | null = null;
-    transactionsData: TransactionModel[] = [];
+    dataSource = new MatTableDataSource<TransactionModel>([]);
+    pageSize = 10;
+    displayedColumns: string[] = ['number', 'amount', 'cardNumber', 'returnCode', 'timestamp'];
     transactionsLoaded = false;
     transaction = {
         amount: null as number | null
@@ -31,6 +37,25 @@ export class TransactionCreateComponent implements OnInit {
 
     ngOnInit(): void {
         this.loadCurrentAccount();
+    }
+
+    ngAfterViewInit(): void {
+        this.dataSource.paginator = this.paginator;
+    }
+
+    onPageSizeChange() {
+        const paginator = this.dataSource.paginator;
+        if (!paginator) {
+            return;
+        }
+
+        paginator.pageIndex = 0;
+        paginator.pageSize = this.pageSize;
+        paginator.page.next({
+            pageIndex: 0,
+            pageSize: this.pageSize,
+            length: this.dataSource.data.length
+        });
     }
 
     getTransactionStatusLabel(returnCode: string | number): string {
@@ -87,7 +112,7 @@ export class TransactionCreateComponent implements OnInit {
                 if (user.accountId == null) {
                     this.currentAccount = null;
                     this.statusMessage = 'No account assigned to your user.';
-                    this.transactionsData = [];
+                    this.dataSource.data = [];
                     this.transactionsLoaded = true;
                     return;
                 }
@@ -97,7 +122,7 @@ export class TransactionCreateComponent implements OnInit {
                         this.currentAccount = accounts.find(account => account.id === user.accountId) ?? null;
                         if (!this.currentAccount) {
                             this.statusMessage = 'No account assigned to your user.';
-                            this.transactionsData = [];
+                            this.dataSource.data = [];
                             this.transactionsLoaded = true;
                             return;
                         }
@@ -108,14 +133,14 @@ export class TransactionCreateComponent implements OnInit {
                     },
                     error: () => {
                         this.statusMessage = 'Could not load account details.';
-                        this.transactionsData = [];
+                        this.dataSource.data = [];
                         this.transactionsLoaded = true;
                     }
                 });
             },
             error: () => {
                 this.statusMessage = 'Could not load user details.';
-                this.transactionsData = [];
+                this.dataSource.data = [];
                 this.transactionsLoaded = true;
             }
         });
@@ -125,7 +150,7 @@ export class TransactionCreateComponent implements OnInit {
         this.transactionsLoaded = false;
 
         if (!this.currentAccountCardNumber) {
-            this.transactionsData = [];
+            this.dataSource.data = [];
             this.statusMessage = 'No account assigned to your user.';
             this.transactionsLoaded = true;
             return;
@@ -133,7 +158,7 @@ export class TransactionCreateComponent implements OnInit {
 
         this.frontEndService.getTransactionsOfCardNumber(this.currentAccountCardNumber).subscribe({
             next: (data) => {
-                this.transactionsData = data;
+                this.dataSource.data = data;
                 this.transactionsLoaded = true;
             },
             error: () => {
