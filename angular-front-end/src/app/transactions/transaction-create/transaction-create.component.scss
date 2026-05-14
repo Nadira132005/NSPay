@@ -38,6 +38,12 @@ h1 {
     color: #6b7280;
 }
 
+.status-line {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: #6b7280;
+}
+
 .transaction-form {
     display: grid;
     gap: 14px;
@@ -68,6 +74,18 @@ button {
     background: #1d4ed8;
     color: #fff;
     border: none;
+}
+
+button.suspended-button:disabled {
+    background: #9ca3af;
+    color: #fff;
+    cursor: not-allowed;
+}
+
+button:disabled:not(.suspended-button) {
+    background: #cbd5e1;
+    color: #fff;
+    cursor: not-allowed;
 }
 
 .status {

@@ -21,8 +21,16 @@ export class FrontEndService {
         return this._httpClient.post<AccountModel>('/api/accounts/', account);
     }
 
+    updateAccount(id: number, account: any): Observable<AccountModel> {
+        return this._httpClient.put<AccountModel>(`/api/accounts/${id}`, account);
+    }
+
     deleteAccount(id: number): Observable<void> {
         return this._httpClient.delete<void>(`/api/accounts/${id}`);
+    }
+
+    suspendAccount(id: number): Observable<void> {
+        return this._httpClient.put<void>(`/api/accounts/${id}/suspend`, {});
     }
 
     createTransaction(transaction: any): Observable<any> {

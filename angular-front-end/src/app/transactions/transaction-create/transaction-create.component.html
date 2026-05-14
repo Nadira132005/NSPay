@@ -21,9 +21,15 @@
                         placeholder="Amount">
             </label>
 
-            <button type="submit" [disabled]="transactionForm.invalid || !currentAccountCardNumber">Create transaction</button>
+            <button
+                    type="submit"
+                    [disabled]="transactionForm.invalid || !currentAccountCardNumber || !isAccountActive()"
+                    [class.suspended-button]="currentAccount && !isAccountActive()">
+                Create transaction
+            </button>
         </form>
 
+        <p class="status" *ngIf="currentAccount && !isAccountActive()">Suspended accounts cannot create transactions.</p>
         <p class="status" *ngIf="statusMessage">{{ statusMessage }}</p>
     </section>
 

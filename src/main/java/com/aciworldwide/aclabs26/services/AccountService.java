@@ -70,6 +70,19 @@ public class AccountService {
         return new ResponseEntity<>(accountRepository.save(account), new HttpHeaders(), HttpStatus.OK);
     }
 
+    public ResponseEntity<?> suspendAccount(long id) {
+        logger.info("Suspending account with id {}", id);
+        Optional<AccountModel> accountOptional = accountRepository.findById(id);
+        if (!accountOptional.isPresent()) {
+            throw new ResourceNotFoundException("Account with id " + id + " is not found");
+        }
+
+        AccountModel account = accountOptional.get();
+        account.setStatus(AccountStatus.SUSPENDED);
+        accountRepository.save(account);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
     public ResponseEntity<?> deleteAccount(long id) {
         logger.info("Deleting account with id {}", id);
         if (!accountRepository.existsById(id)) {
@@ -89,6 +102,9 @@ public class AccountService {
     private void apply(AccountModel account, AccountDTO accountDTO) {
         account.setCardNumber(accountDTO.getCardNumber());
         account.setCardHolderName(accountDTO.getCardHolderName());
+        if (accountDTO.getStatus() != null) {
+            account.setStatus(accountDTO.getStatus());
+        }
         account.setAmount(accountDTO.getAmount());
         account.setDailyTxLimit(accountDTO.getDailyTxLimit());
         account.setDailyTxSumLimit(accountDTO.getDailyTxSumLimit());

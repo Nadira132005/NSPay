@@ -43,9 +43,18 @@ export class TransactionCreateComponent implements OnInit {
         return code === TRANSACTION_SUCCESS_CODE ? 'status-success' : 'status-error';
     }
 
+    isAccountActive(): boolean {
+        return (this.currentAccount?.status || 'ACTIVE') === 'ACTIVE';
+    }
+
     createTransaction() {
         if (!this.currentAccountCardNumber) {
             this.statusMessage = 'No account assigned to your user.';
+            return;
+        }
+
+        if (!this.isAccountActive()) {
+            this.statusMessage = 'Suspended accounts cannot create transactions.';
             return;
         }
 
@@ -93,6 +102,7 @@ export class TransactionCreateComponent implements OnInit {
                             return;
                         }
 
+                        this.currentAccount.status = this.currentAccount.status || 'ACTIVE';
                         this.currentAccountCardNumber = this.currentAccount.cardNumber;
                         this.loadTransactions();
                     },

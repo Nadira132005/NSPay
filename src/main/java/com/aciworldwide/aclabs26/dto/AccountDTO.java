@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.aciworldwide.aclabs26.entities.AccountStatus;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Positive;
@@ -21,6 +22,8 @@ public class AccountDTO {
 
     @NotBlank(message = "Card holder name  required")
     private String cardHolderName;
+
+    private AccountStatus status;
 
     @Positive(message = "Amount must be greater than zero")
     private double amount;

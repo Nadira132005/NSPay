@@ -72,4 +72,11 @@ public class AccountController {
         logger.info("DELETE /accounts/{} called", id);
         return accountService.deleteAccount(id);
     }
+
+    @PutMapping("/{id}/suspend")
+    @Operation(summary = "Suspend account")
+    public ResponseEntity<?> suspendAccount(@PathVariable long id) {
+        logger.info("PUT /accounts/{}/suspend called", id);
+        return accountService.suspendAccount(id);
+    }
 }

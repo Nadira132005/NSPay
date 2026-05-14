@@ -45,6 +45,11 @@ button {
     color: #fff;
 }
 
+.on-delete:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
 .modal-backdrop {
     position: fixed;
     inset: 0;

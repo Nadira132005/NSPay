@@ -10,8 +10,9 @@ import { AccountModel } from '../../models/account-model';
 export class AdminAccountsComponent implements OnInit {
     accountsData: AccountModel[] = [];
     statusMessage = '';
-    deleteConfirmOpen = false;
+    actionConfirmOpen = false;
     pendingDeleteAccountId: number | null = null;
+    statuses: string[] = ['ACTIVE', 'SUSPENDED', 'BLOCKED', 'CLOSED', 'FROZEN'];
 
     account = {
         cardNumber: '',
@@ -27,6 +28,7 @@ export class AdminAccountsComponent implements OnInit {
         'id',
         'cardNumber',
         'cardHolderName',
+        'status',
         'amount',
         'dailyTxLimit',
         'dailyTxSumLimit',
@@ -63,21 +65,22 @@ export class AdminAccountsComponent implements OnInit {
 
     deleteAccount(id: number) {
         this.pendingDeleteAccountId = id;
-        this.deleteConfirmOpen = true;
+        this.actionConfirmOpen = true;
     }
 
-    cancelDeleteAccount() {
-        this.deleteConfirmOpen = false;
+    cancelActionAccount() {
+        this.actionConfirmOpen = false;
         this.pendingDeleteAccountId = null;
     }
 
-    confirmDeleteAccount() {
-        if (this.pendingDeleteAccountId == null) {
+    confirmActionAccount() {
+        const id = this.pendingDeleteAccountId;
+
+        if (id == null) {
             return;
         }
 
-        const id = this.pendingDeleteAccountId;
-        this.deleteConfirmOpen = false;
+        this.actionConfirmOpen = false;
         this.pendingDeleteAccountId = null;
 
         this.frontEndService.deleteAccount(id).subscribe({
@@ -86,8 +89,29 @@ export class AdminAccountsComponent implements OnInit {
                 this.loadAccounts();
             },
             error: (error) => {
-                console.error('Delete account failed:', error);
+                console.error('Account action failed:', error);
                 this.statusMessage = 'Could not delete account.';
+            }
+        });
+    }
+
+    updateAccountStatus(row: AccountModel, status: string) {
+        if (row.id == null) {
+            return;
+        }
+
+        row.status = status;
+        const payload = { ...row, status };
+
+        this.frontEndService.updateAccount(row.id, payload).subscribe({
+            next: () => {
+                this.statusMessage = 'Account status updated.';
+                this.loadAccounts();
+            },
+            error: (error) => {
+                console.error('Update account status failed:', error);
+                this.statusMessage = 'Could not update account status.';
+                this.loadAccounts();
             }
         });
     }
@@ -95,7 +119,10 @@ export class AdminAccountsComponent implements OnInit {
     private loadAccounts() {
         this.frontEndService.getAccounts().subscribe({
             next: (data) => {
-                this.accountsData = data;
+                this.accountsData = data.map(account => ({
+                    ...account,
+                    status: account.status || 'ACTIVE'
+                }));
             },
             error: (error) => {
                 console.error('Load accounts failed:', error);
