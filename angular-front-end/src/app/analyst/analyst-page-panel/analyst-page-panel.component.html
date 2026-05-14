@@ -1,0 +1,97 @@
+<div class="page">
+    <h2>Transactions</h2>
+    <p class="subtitle">Filter by date, amount, status, type, and user.</p>
+
+    <section class="filters">
+        <label>
+            <span>Date from</span>
+            <input type="date" [(ngModel)]="filters.dateFrom" [ngModelOptions]="{standalone: true}" (ngModelChange)="applyFilters()">
+        </label>
+
+        <label>
+            <span>Date to</span>
+            <input type="date" [(ngModel)]="filters.dateTo" [ngModelOptions]="{standalone: true}" (ngModelChange)="applyFilters()">
+        </label>
+
+        <div class="range-block">
+            <span>Amount range</span>
+            <mat-slider color="primary" [min]="amountBounds.min" [max]="amountBounds.max" [step]="0.01">
+                <input matSliderStartThumb [min]="amountBounds.min" [max]="filters.amountTo" [value]="filters.amountFrom" (valueChange)="onAmountFromChange($event)">
+                <input matSliderEndThumb [min]="filters.amountFrom" [max]="amountBounds.max" [value]="filters.amountTo" (valueChange)="onAmountToChange($event)">
+            </mat-slider>
+            <strong>{{ filters.amountFrom }} - {{ filters.amountTo }}</strong>
+        </div>
+
+        <label>
+            <span>User</span>
+            <select [(ngModel)]="filters.accountFilter" [ngModelOptions]="{standalone: true}" (ngModelChange)="applyFilters()">
+                <option value="all">All</option>
+                <option *ngFor="let account of accountOptions" [value]="account.value">{{ account.label }}</option>
+            </select>
+        </label>
+
+        <label>
+            <span>Status</span>
+            <select [(ngModel)]="filters.statusFilter" [ngModelOptions]="{standalone: true}" (ngModelChange)="applyFilters()">
+                <option *ngFor="let status of statusOptions" [value]="status">
+                    {{ status === 'all' ? 'All' : status }}
+                </option>
+            </select>
+        </label>
+
+        <label>
+            <span>Type</span>
+            <select [(ngModel)]="filters.returnCodeFilter" [ngModelOptions]="{standalone: true}" (ngModelChange)="applyFilters()">
+                <option *ngFor="let option of returnCodeOptions" [value]="option">
+                    {{ option === 'all' ? 'All' : getTransactionStatusLabel(option.split(':')[0]) }}
+                </option>
+            </select>
+        </label>
+    </section>
+
+    <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+        <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> id </th>
+            <td mat-cell *matCellDef="let row"> {{ row.id }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="timestamp">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> timestamp </th>
+            <td mat-cell *matCellDef="let row"> {{ row.timestamp }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="cardHolderName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> user </th>
+            <td mat-cell *matCellDef="let row"> {{ row.cardHolderName }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="cardNumber">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> cardNumber </th>
+            <td mat-cell *matCellDef="let row"> {{ row.cardNumber }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> amount </th>
+            <td mat-cell *matCellDef="let row"> {{ row.amount }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="returnCode">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> returnCode </th>
+            <td mat-cell *matCellDef="let row">
+                <span [ngClass]="getTransactionStatusClass(row.returnCode)">
+                    {{ getTransactionStatusLabel(row.returnCode) }}
+                </span>
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+
+    <p class="status" *ngIf="statusMessage">{{ statusMessage }}</p>
+
+    <p class="status" *ngIf="dataSource.data.length === 0">No transactions.</p>
+    <p class="status" *ngIf="dataSource.data.length > 0 && dataSource.filteredData.length === 0">No transactions match the current filters.</p>
+</div>

@@ -1,0 +1,17 @@
+<div class="analyst-shell">
+    <div class="hero">
+        <p class="section-label">Analyst page</p>
+        <h1>Reporting dashboard</h1>
+        <p class="subtitle">Review data with filters, sorting, and paging.</p>
+    </div>
+
+    <nav class="tabs">
+        <a routerLink="accounts" routerLinkActive="active">Accounts</a>
+        <a routerLink="transactions" routerLinkActive="active">Transactions</a>
+        <a routerLink="users" routerLinkActive="active">Users</a>
+    </nav>
+
+    <section class="tab-panel">
+        <router-outlet></router-outlet>
+    </section>
+</div>

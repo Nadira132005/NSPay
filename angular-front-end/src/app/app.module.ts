@@ -14,6 +14,13 @@ import { AdminPageComponent } from './admin/admin-page/admin-page.component';
 import { AdminAccountsComponent } from './admin/admin-accounts/admin-accounts.component';
 import { AdminPagePanelComponent } from './admin/admin-page-panel/admin-page-panel.component';
 import { TransactionCreateComponent } from './transactions/transaction-create/transaction-create.component';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
+import { MatSliderModule } from '@angular/material/slider';
+import { AnalystPageComponent } from './analyst/analyst-page/analyst-page.component';
+import { AnalystAccountsComponent } from './analyst/analyst-accounts/analyst-accounts.component';
+import { AnalystUsersComponent } from './analyst/analyst-users/analyst-users.component';
+import { AnalystPagePanelComponent } from './analyst/analyst-page-panel/analyst-page-panel.component';
 
 @NgModule({
   declarations: [
@@ -25,11 +32,18 @@ import { TransactionCreateComponent } from './transactions/transaction-create/tr
     AdminPageComponent,
     AdminAccountsComponent,
     AdminPagePanelComponent,
-    TransactionCreateComponent
+    TransactionCreateComponent,
+    AnalystPageComponent,
+    AnalystAccountsComponent,
+    AnalystUsersComponent,
+    AnalystPagePanelComponent
   ],
     imports: [
         BrowserModule,
         MatTableModule,
+        MatPaginatorModule,
+        MatSortModule,
+        MatSliderModule,
         HttpClientModule,
         ReactiveFormsModule,
         FormsModule,

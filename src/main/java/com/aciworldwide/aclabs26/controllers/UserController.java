@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import javax.servlet.http.HttpServletRequest; //validated JWT, not from a header that client could fake
@@ -38,7 +37,7 @@ public class UserController {
 
     @GetMapping({"", "/"})
     public ResponseEntity<List<UserModel>> getUsers(HttpServletRequest request) {
-        assertAdmin(request);
+        assertReadOnly(request);
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
@@ -72,6 +71,13 @@ public class UserController {
         String currentRole = (String) request.getAttribute("authenticatedRole");
         if (!"Admin".equals(currentRole)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only Admin can manage users");
+        }
+    }
+
+    private void assertReadOnly(HttpServletRequest request) {
+        String currentRole = (String) request.getAttribute("authenticatedRole");
+        if (!"Admin".equals(currentRole) && !"Analyst".equals(currentRole)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only Admin or Analyst can view users");
         }
     }
 }

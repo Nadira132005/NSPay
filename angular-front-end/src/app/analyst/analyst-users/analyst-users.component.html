@@ -1,0 +1,54 @@
+<div class="page">
+    <h2>Users</h2>
+    <p class="subtitle">Sort by any field and filter by role or text.</p>
+
+    <section class="filters">
+        <label>
+            <span>Role</span>
+            <select [(ngModel)]="roleFilter" [ngModelOptions]="{standalone: true}" (ngModelChange)="applyFilters()">
+                <option value="all">All</option>
+                <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+            </select>
+        </label>
+
+        <label>
+            <span>Search</span>
+            <input type="text" [(ngModel)]="searchFilter" [ngModelOptions]="{standalone: true}" (ngModelChange)="applyFilters()" placeholder="Name, account, status">
+        </label>
+    </section>
+
+    <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
+        <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> id </th>
+            <td mat-cell *matCellDef="let row"> {{ row.id }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> name </th>
+            <td mat-cell *matCellDef="let row"> {{ row.name }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> role </th>
+            <td mat-cell *matCellDef="let row"> {{ row.role }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="account">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header> account </th>
+            <td mat-cell *matCellDef="let row">
+                <div>{{ row.accountLabel }}</div>
+                <small>{{ row.accountStatus }}</small>
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+
+    <p class="status" *ngIf="statusMessage">{{ statusMessage }}</p>
+
+    <p class="status" *ngIf="dataSource.data.length === 0">No users.</p>
+    <p class="status" *ngIf="dataSource.data.length > 0 && dataSource.filteredData.length === 0">No users match the current filters.</p>
+</div>

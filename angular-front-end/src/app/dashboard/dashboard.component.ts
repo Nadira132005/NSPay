@@ -17,6 +17,10 @@ export class DashboardComponent {
         return this.userService.getCurrentRole() === 'Admin';
     }
 
+    isAnalyst(): boolean {
+        return this.userService.getCurrentRole() === 'Analyst';
+    }
+
     openLogoutConfirm() {
         this.logoutConfirmOpen = true;
     }
