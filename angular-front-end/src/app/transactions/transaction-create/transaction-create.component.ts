@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { take } from 'rxjs/operators';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { AccountModel } from '../../models/account-model';
@@ -36,6 +37,7 @@ export class TransactionCreateComponent implements OnInit, AfterViewInit {
     }
 
     ngOnInit(): void {
+        this.trackAudit('PAGE: Transaction page');
         this.loadCurrentAccount();
     }
 
@@ -98,6 +100,7 @@ export class TransactionCreateComponent implements OnInit, AfterViewInit {
                 const prefix = response?.businessLogicViolation ? 'Unsuccessful transaction' : 'Successful transaction';
                 this.statusMessage = `${prefix}: ${label}`;
                 this.transaction.amount = null;
+                this.trackAudit('ACTION: Create transaction');
                 this.loadCurrentAccount();
             },
             error: () => {
@@ -164,6 +167,16 @@ export class TransactionCreateComponent implements OnInit, AfterViewInit {
             error: () => {
                 this.statusMessage = 'Could not load transactions.';
                 this.transactionsLoaded = true;
+            }
+        });
+    }
+
+    private trackAudit(action: string) {
+        this.frontEndService.recordAudit(action)
+            .pipe(take(1))
+            .subscribe({
+            error: () => {
+                console.warn('Audit tracking failed silently:', action);
             }
         });
     }

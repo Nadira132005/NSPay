@@ -1,0 +1,32 @@
+<div class="page">
+    <h2>Audit log</h2>
+    <p class="subtitle">Critical actions captured from the interface.</p>
+
+    <table mat-table [dataSource]="auditEntries" class="mat-elevation-z8">
+        <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef> id </th>
+            <td mat-cell *matCellDef="let row"> {{ row.id }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="user">
+            <th mat-header-cell *matHeaderCellDef> user </th>
+            <td mat-cell *matCellDef="let row"> {{ row.user }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actiune">
+            <th mat-header-cell *matHeaderCellDef> actiune </th>
+            <td mat-cell *matCellDef="let row"> {{ row.actiune }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="timestamp">
+            <th mat-header-cell *matHeaderCellDef> timestamp </th>
+            <td mat-cell *matCellDef="let row"> {{ row.timestamp }} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <p class="status" *ngIf="statusMessage">{{ statusMessage }}</p>
+    <p class="status" *ngIf="auditEntries.length === 0 && !statusMessage">No audit entries.</p>
+</div>

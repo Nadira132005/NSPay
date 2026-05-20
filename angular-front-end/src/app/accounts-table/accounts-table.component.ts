@@ -1,4 +1,5 @@
 import {Component,OnInit } from '@angular/core';
+import { take } from 'rxjs/operators';
 import {AccountModel} from '../models/account-model';
 import {FrontEndService} from '../utils/front-end.service';
 import {UserService} from '../utils/user.service';
@@ -21,6 +22,7 @@ export class AccountsTableComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.trackAudit('PAGE: Account page');
         this.loadCurrentAccount();
     }
 
@@ -51,6 +53,16 @@ export class AccountsTableComponent implements OnInit {
             },
             error: () => {
                 this.statusMessage = 'Could not load user details.';
+            }
+        });
+    }
+
+    private trackAudit(action: string) {
+        this.frontEndService.recordAudit(action)
+            .pipe(take(1))
+            .subscribe({
+            error: () => {
+                console.warn('Audit tracking failed silently:', action);
             }
         });
     }

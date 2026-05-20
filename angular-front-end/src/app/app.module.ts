@@ -22,6 +22,7 @@ import { AnalystPageComponent } from './analyst/analyst-page/analyst-page.compon
 import { AnalystAccountsComponent } from './analyst/analyst-accounts/analyst-accounts.component';
 import { AnalystUsersComponent } from './analyst/analyst-users/analyst-users.component';
 import { AnalystPagePanelComponent } from './analyst/analyst-page-panel/analyst-page-panel.component';
+import { AnalystAuditComponent } from './analyst/analyst-audit/analyst-audit.component';
 
 @NgModule({
   declarations: [
@@ -37,7 +38,8 @@ import { AnalystPagePanelComponent } from './analyst/analyst-page-panel/analyst-
     AnalystPageComponent,
     AnalystAccountsComponent,
     AnalystUsersComponent,
-    AnalystPagePanelComponent
+    AnalystPagePanelComponent,
+    AnalystAuditComponent
   ],
     imports: [
         BrowserModule,

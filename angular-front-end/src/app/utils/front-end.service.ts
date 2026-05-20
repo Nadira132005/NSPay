@@ -2,6 +2,7 @@ import {Injectable} from "@angular/core";
 import {HttpClient} from "@angular/common/http";
 import {Observable} from "rxjs";
 import {AccountModel} from "../models/account-model";
+import {AuditModel} from "../models/audit.model";
 import {TransactionModel} from "../models/transaction-model";
 import {UserModel} from "../models/user.model";
 
@@ -55,5 +56,13 @@ export class FrontEndService {
 
     deleteUser(id: number): Observable<void> {
         return this._httpClient.delete<void>(`/api/users/${id}`);
+    }
+
+    recordAudit(action: string): Observable<unknown> {
+        return this._httpClient.post('/api/audit/', { action });
+    }
+
+    getAuditEntries(): Observable<AuditModel[]> {
+        return this._httpClient.get<AuditModel[]>('/api/audit/');
     }
 }

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { take } from 'rxjs/operators';
 import { FrontEndService } from '../../utils/front-end.service';
 import { AccountModel } from '../../models/account-model';
 
@@ -41,6 +42,7 @@ export class AdminAccountsComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.trackAudit('PAGE: Admin accounts');
         this.loadAccounts();
     }
 
@@ -52,6 +54,7 @@ export class AdminAccountsComponent implements OnInit {
 
         this.frontEndService.createAccount(this.account).subscribe({
             next: () => {
+                this.trackAudit('ACTION: Create account');
                 this.statusMessage = `Account ${this.account.cardNumber} was created.`;
                 this.resetForm();
                 this.loadAccounts();
@@ -85,6 +88,7 @@ export class AdminAccountsComponent implements OnInit {
 
         this.frontEndService.deleteAccount(id).subscribe({
             next: () => {
+                this.trackAudit('ACTION: Delete account');
                 this.statusMessage = 'Account deleted.';
                 this.loadAccounts();
             },
@@ -105,6 +109,7 @@ export class AdminAccountsComponent implements OnInit {
 
         this.frontEndService.updateAccount(row.id, payload).subscribe({
             next: () => {
+                this.trackAudit('ACTION: Update account status');
                 this.statusMessage = 'Account status updated.';
                 this.loadAccounts();
             },
@@ -141,5 +146,15 @@ export class AdminAccountsComponent implements OnInit {
             dailyTx: 0,
             dailyTxSum: 0
         };
+    }
+
+    private trackAudit(action: string) {
+        this.frontEndService.recordAudit(action)
+            .pipe(take(1))
+            .subscribe({
+            error: () => {
+                console.warn('Audit tracking failed silently:', action);
+            }
+        });
     }
 }

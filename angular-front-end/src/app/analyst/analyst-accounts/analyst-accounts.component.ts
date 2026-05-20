@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { take } from 'rxjs/operators';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
 import { AccountModel } from '../../models/account-model';
@@ -36,6 +37,7 @@ export class AnalystAccountsComponent implements OnInit, AfterViewInit {
     constructor(private frontEndService: FrontEndService) {}
 
     ngOnInit(): void {
+        this.trackAudit('PAGE: Analyst accounts');
         this.dataSource.filterPredicate = (account, filter) => {
             const parsed = JSON.parse(filter) as { status: string; amountFrom: number; amountTo: number };
             const rowStatus = account.status || 'ACTIVE';
@@ -113,6 +115,16 @@ export class AnalystAccountsComponent implements OnInit, AfterViewInit {
             },
             error: () => {
                 this.statusMessage = 'Could not load accounts.';
+            }
+        });
+    }
+
+    private trackAudit(action: string) {
+        this.frontEndService.recordAudit(action)
+            .pipe(take(1))
+            .subscribe({
+            error: () => {
+                console.warn('Audit tracking failed silently:', action);
             }
         });
     }

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { take } from 'rxjs/operators';
 import { AccountModel } from '../../models/account-model';
 import { UserModel, UserRole } from '../../models/user.model';
 import { UserService } from '../../utils/user.service';
@@ -30,6 +31,7 @@ export class AdminUsersComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.trackAudit('PAGE: Admin users');
         this.loadAccounts();
         this.loadUsers();
     }
@@ -37,6 +39,7 @@ export class AdminUsersComponent implements OnInit {
     createUser() {
         this.userService.createUser(this.user).subscribe({
             next: () => {
+                this.trackAudit('ACTION: Create user');
                 this.statusMessage = `User "${this.user.name}" was created.`;
                 this.user = {
                     name: '',
@@ -89,6 +92,7 @@ export class AdminUsersComponent implements OnInit {
 
         this.userService.deleteUser(id).subscribe({
             next: () => {
+                this.trackAudit('ACTION: Delete user');
                 this.statusMessage = 'User deleted.';
                 this.loadUsers();
             },
@@ -106,6 +110,7 @@ export class AdminUsersComponent implements OnInit {
 
         this.userService.updateUser(user.id, user).subscribe({
             next: () => {
+                this.trackAudit('ACTION: Update user account');
                 this.statusMessage = 'User account updated.';
                 this.loadUsers();
             },
@@ -135,6 +140,16 @@ export class AdminUsersComponent implements OnInit {
                 if (this.user.accountId == null) {
                     this.user.accountId = accounts[0]?.id ?? null;
                 }
+            }
+        });
+    }
+
+    private trackAudit(action: string) {
+        this.frontEndService.recordAudit(action)
+            .pipe(take(1))
+            .subscribe({
+            error: () => {
+                console.warn('Audit tracking failed silently:', action);
             }
         });
     }

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { take } from 'rxjs/operators';
 import { FrontEndService } from '../../utils/front-end.service';
 import { TransactionModel, TRANSACTION_STATUS_LABELS, TRANSACTION_SUCCESS_CODE } from '../../models/transaction-model';
 
@@ -19,6 +20,7 @@ export class AdminPagePanelComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.trackAudit('PAGE: Admin transactions');
         this.loadTransactions();
     }
 
@@ -36,6 +38,16 @@ export class AdminPagePanelComponent implements OnInit {
         this.frontEndService.getTransactions().subscribe({
             next: (data) => {
                 this.transactionsData = data;
+            }
+        });
+    }
+
+    private trackAudit(action: string) {
+        this.frontEndService.recordAudit(action)
+            .pipe(take(1))
+            .subscribe({
+            error: () => {
+                console.warn('Audit tracking failed silently:', action);
             }
         });
     }

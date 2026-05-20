@@ -1,4 +1,5 @@
 import { AfterViewInit, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { take } from 'rxjs/operators';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -91,6 +92,7 @@ export class AnalystPagePanelComponent implements OnInit, AfterViewInit {
     }
 
     ngOnInit(): void {
+        this.trackAudit('PAGE: Analyst transactions');
         this.filters.accountFilter = 'all';
         this.filters.statusFilter = 'all';
         this.filters.returnCodeFilter = 'all';
@@ -229,5 +231,15 @@ export class AnalystPagePanelComponent implements OnInit, AfterViewInit {
         this.loading = false;
         this.loaded = true;
         this.cdr.detectChanges();
+    }
+
+    private trackAudit(action: string) {
+        this.frontEndService.recordAudit(action)
+            .pipe(take(1))
+            .subscribe({
+            error: () => {
+                console.warn('Audit tracking failed silently:', action);
+            }
+        });
     }
 }

@@ -14,6 +14,7 @@ import {AnalystPageComponent} from "./analyst/analyst-page/analyst-page.componen
 import {AnalystAccountsComponent} from "./analyst/analyst-accounts/analyst-accounts.component";
 import {AnalystUsersComponent} from "./analyst/analyst-users/analyst-users.component";
 import {AnalystPagePanelComponent} from "./analyst/analyst-page-panel/analyst-page-panel.component";
+import {AnalystAuditComponent} from "./analyst/analyst-audit/analyst-audit.component";
 
 export const ROUTES: Routes = [
     {path: '', component: LoginComponent},
@@ -57,6 +58,7 @@ export const ROUTES: Routes = [
                     {path: 'accounts', component: AnalystAccountsComponent, data: {roles: ['Admin', 'Analyst']}},
                     {path: 'transactions', component: AnalystPagePanelComponent, data: {roles: ['Admin', 'Analyst']}},
                     {path: 'users', component: AnalystUsersComponent, data: {roles: ['Admin', 'Analyst']}},
+                    {path: 'audit', component: AnalystAuditComponent, data: {roles: ['Admin', 'Analyst']}},
                 ]
             },
         ]
