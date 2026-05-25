@@ -1,0 +1,132 @@
+<div class="deposits-page">
+    <section class="hero">
+        <div>
+            <p class="section-label">Deposits page</p>
+            <h1>{{ currentUserName || 'Deposits' }}</h1>
+            <p class="subtitle">Manage the primary account and the deposits that belong to the same user.</p>
+        </div>
+
+        <div class="summary" *ngIf="primaryDeposit; else missingAccount">
+            <div>
+                <span>Primary balance</span>
+                <strong>{{ primaryDeposit?.balance | number:'1.2-2' }}</strong>
+            </div>
+            <div>
+                <span>Total across deposits</span>
+                <strong>{{ totalBalance | number:'1.2-2' }}</strong>
+            </div>
+        </div>
+    </section>
+
+    <div class="notice" *ngIf="feedbackMessage" [class.success]="feedbackKind === 'success'" [class.error]="feedbackKind === 'error'">
+        {{ feedbackMessage }}
+    </div>
+
+    <ng-template #missingAccount>
+        <section class="empty-state">
+            <h2>No primary account</h2>
+            <p>The page needs a primary account before you can create deposits or transfer money.</p>
+        </section>
+    </ng-template>
+
+    <section class="workspace" *ngIf="!loading && primaryDeposit">
+        <article class="panel create-panel">
+            <div class="panel-header">
+                <div>
+                    <p class="panel-kicker">Create deposit</p>
+                    <h2>Move money from the primary account</h2>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <label>
+                    <span>Deposit name</span>
+                    <input type="text" [(ngModel)]="newDepositName" placeholder="Birthday, savings, travel..." />
+                </label>
+
+                <label>
+                    <span>Initial transfer amount</span>
+                    <input type="number" [(ngModel)]="newDepositAmount" min="0" step="0.01" placeholder="0.00" />
+                </label>
+            </div>
+
+            <button type="button" class="primary-button" (click)="createDeposit()">Create deposit</button>
+        </article>
+
+        <article class="panel deposits-panel">
+            <div class="panel-header">
+                <div>
+                    <p class="panel-kicker">All deposits</p>
+                    <h2>Balances for the same user</h2>
+                </div>
+            </div>
+
+            <div class="deposit-list">
+                <div class="deposit-card" *ngFor="let deposit of deposits" [class.primary]="deposit.isPrimary">
+                    <div>
+                        <p class="deposit-name">{{ deposit.name }}</p>
+                        <p class="deposit-tag" *ngIf="deposit.isPrimary">Primary account</p>
+                    </div>
+                    <div class="deposit-actions">
+                        <strong>{{ deposit.balance | number:'1.2-2' }}</strong>
+                        <button
+                            *ngIf="!deposit.isPrimary"
+                            type="button"
+                            class="deposit-action"
+                            (click)="deleteDeposit(deposit.id)"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="panel transfer-panel" *ngIf="!loading && primaryDeposit">
+        <div class="panel-header">
+            <div>
+                <p class="panel-kicker">Transfer money</p>
+                <h2>Move funds between deposits</h2>
+            </div>
+        </div>
+
+        <div class="form-grid transfer-grid">
+            <label>
+                <span>From deposit</span>
+                <select [(ngModel)]="transferFromId">
+                    <option *ngFor="let deposit of deposits" [ngValue]="deposit.id">{{ deposit.name }}</option>
+                </select>
+            </label>
+
+            <label>
+                <span>To deposit</span>
+                <select [(ngModel)]="transferToId">
+                    <option *ngFor="let deposit of deposits" [ngValue]="deposit.id">{{ deposit.name }}</option>
+                </select>
+            </label>
+
+            <label>
+                <span>Amount</span>
+                <input type="number" [(ngModel)]="transferAmount" min="0" step="0.01" placeholder="0.00" />
+            </label>
+        </div>
+
+        <button type="button" class="primary-button" (click)="transferFunds()">Transfer</button>
+    </section>
+
+    <div class="modal-backdrop" *ngIf="deleteConfirmOpen">
+        <div class="modal">
+            <p class="panel-kicker">Delete deposit</p>
+            <h2>Are you sure?</h2>
+            <p class="modal-text" *ngIf="depositPendingDeletion">
+                Deleting "{{ depositPendingDeletion.name }}" will return {{ depositPendingDeletion.balance | number:'1.2-2' }}
+                to the primary account.
+            </p>
+            <div class="modal-actions">
+                <button type="button" class="secondary-button" (click)="cancelDeleteDeposit()">Cancel</button>
+                <button type="button" class="primary-button" (click)="confirmDeleteDeposit()">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>

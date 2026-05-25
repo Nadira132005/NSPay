@@ -10,6 +10,7 @@ import {AdminPageComponent} from "./admin/admin-page/admin-page.component";
 import {AdminAccountsComponent} from "./admin/admin-accounts/admin-accounts.component";
 import {AdminPagePanelComponent} from "./admin/admin-page-panel/admin-page-panel.component";
 import {TransactionCreateComponent} from "./transactions/transaction-create/transaction-create.component";
+import {DepositsPageComponent} from "./deposits-page/deposits-page.component";
 import {AnalystPageComponent} from "./analyst/analyst-page/analyst-page.component";
 import {AnalystAccountsComponent} from "./analyst/analyst-accounts/analyst-accounts.component";
 import {AnalystUsersComponent} from "./analyst/analyst-users/analyst-users.component";
@@ -27,6 +28,7 @@ export const ROUTES: Routes = [
         children: [
             {path: '', pathMatch: 'full', redirectTo: 'accounts'},
             {path: 'accounts', component: AccountsTableComponent, data: {roles: ['Admin', 'User', 'Analyst']}},
+            {path: 'deposits', component: DepositsPageComponent, data: {roles: ['Admin', 'User', 'Analyst']}},
             {path: 'transactions', component: TransactionCreateComponent, data: {roles: ['Admin', 'User', 'Analyst']}},
             {path: 'users', component: AdminUsersComponent, canActivate: [authorizationGuard], data: {roles: ['Admin']}},
             {

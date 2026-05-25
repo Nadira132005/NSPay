@@ -2,6 +2,7 @@ import {Component,OnInit } from '@angular/core';
 import { take } from 'rxjs/operators';
 import {AccountModel} from '../models/account-model';
 import {FrontEndService} from '../utils/front-end.service';
+import {DepositsStoreService} from '../utils/deposits-store.service';
 import {UserService} from '../utils/user.service';
 
 @Component({
@@ -12,12 +13,14 @@ import {UserService} from '../utils/user.service';
 export class AccountsTableComponent implements OnInit {
     accountsData: AccountModel[] = [];
     currentAccount: AccountModel | null = null;
+    displayedAmount = 0;
     currentUserName = '';
     statusMessage = '';
 
     constructor(
         private frontEndService: FrontEndService,
-        private userService: UserService
+        private userService: UserService,
+        private depositsStore: DepositsStoreService
     ) {
     }
 
@@ -44,7 +47,10 @@ export class AccountsTableComponent implements OnInit {
 
                         if (!this.currentAccount) {
                             this.statusMessage = 'No account is assigned to this user.';
+                            return;
                         }
+
+                        this.displayedAmount = this.depositsStore.getPrimaryBalance(user.id ?? null, this.currentAccount);
                     },
                     error: () => {
                         this.statusMessage = 'Could not load account details.';

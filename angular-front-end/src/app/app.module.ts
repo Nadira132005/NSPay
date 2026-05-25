@@ -18,6 +18,7 @@ import { TransactionCreateComponent } from './transactions/transaction-create/tr
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatSliderModule } from '@angular/material/slider';
+import { DepositsPageComponent } from './deposits-page/deposits-page.component';
 import { AnalystPageComponent } from './analyst/analyst-page/analyst-page.component';
 import { AnalystAccountsComponent } from './analyst/analyst-accounts/analyst-accounts.component';
 import { AnalystUsersComponent } from './analyst/analyst-users/analyst-users.component';
@@ -35,6 +36,7 @@ import { AnalystAuditComponent } from './analyst/analyst-audit/analyst-audit.com
     AdminAccountsComponent,
     AdminPagePanelComponent,
     TransactionCreateComponent,
+    DepositsPageComponent,
     AnalystPageComponent,
     AnalystAccountsComponent,
     AnalystUsersComponent,
