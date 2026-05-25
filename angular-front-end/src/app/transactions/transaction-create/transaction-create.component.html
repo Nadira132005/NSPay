@@ -21,6 +21,26 @@
                         placeholder="Amount">
             </label>
 
+            <div class="moment-selector">
+                <label>
+                    <span>Moment</span>
+                    <select name="moment" [(ngModel)]="transaction.moment">
+                        <option value="now">Now</option>
+                        <option value="scheduled">Schedule for later</option>
+                    </select>
+                </label>
+
+                <label *ngIf="transaction.moment === 'scheduled'">
+                    <span>Day and hour</span>
+                    <input
+                            name="scheduledAt"
+                            type="datetime-local"
+                            [min]="minScheduledAt"
+                            [required]="transaction.moment === 'scheduled'"
+                            [(ngModel)]="transaction.scheduledAt">
+                </label>
+            </div>
+
             <button
                     type="submit"
                     [disabled]="transactionForm.invalid || !currentAccountCardNumber || !isAccountActive()"
@@ -53,26 +73,26 @@
             <td mat-cell *matCellDef="let row"> {{ row.cardNumber }} </td>
         </ng-container>
 
-        <ng-container matColumnDef="returnCode">
-            <th mat-header-cell *matHeaderCellDef> returnCode </th>
+        <ng-container matColumnDef="state">
+            <th mat-header-cell *matHeaderCellDef> state </th>
             <td mat-cell *matCellDef="let row">
                 <button
                         type="button"
                         class="transaction-code-button"
-                        [ngClass]="getTransactionStatusClass(row.returnCode)"
+                        [ngClass]="getTransactionStateClass(row)"
                         (click)="$event.stopPropagation()">
-                    {{ getTransactionStatusLabel(row.returnCode) }}
+                    {{ getTransactionStateLabel(row) }}
                 </button>
             </td>
         </ng-container>
 
         <ng-container matColumnDef="timestamp">
             <th mat-header-cell *matHeaderCellDef> timestamp </th>
-            <td mat-cell *matCellDef="let row"> {{ row.timestamp }} </td>
+            <td mat-cell *matCellDef="let row"> {{ formatTimestamp(row) }} </td>
         </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="['number', 'amount', 'cardNumber', 'returnCode', 'timestamp']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['number', 'amount', 'cardNumber', 'returnCode', 'timestamp'];"></tr>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
 
     <mat-paginator [length]="dataSource.data.length" [pageSize]="pageSize" showFirstLastButtons></mat-paginator>

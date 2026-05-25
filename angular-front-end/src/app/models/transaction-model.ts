@@ -3,7 +3,10 @@ export interface TransactionModel {
     amount: number,
     cardNumber: string,
     returnCode: number,
-    timestamp: string
+    timestamp: string,
+    status?: 'completed' | 'pending' | 'processing',
+    scheduledAt?: string,
+    localId?: string
 }
 
 export const TRANSACTION_STATUS_LABELS: Record<string, string> = {
