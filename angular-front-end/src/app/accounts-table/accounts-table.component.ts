@@ -2,7 +2,6 @@ import {Component,OnInit } from '@angular/core';
 import { take } from 'rxjs/operators';
 import {AccountModel} from '../models/account-model';
 import {FrontEndService} from '../utils/front-end.service';
-import {DepositsStoreService} from '../utils/deposits-store.service';
 import {UserService} from '../utils/user.service';
 
 @Component({
@@ -19,8 +18,7 @@ export class AccountsTableComponent implements OnInit {
 
     constructor(
         private frontEndService: FrontEndService,
-        private userService: UserService,
-        private depositsStore: DepositsStoreService
+        private userService: UserService
     ) {
     }
 
@@ -50,7 +48,7 @@ export class AccountsTableComponent implements OnInit {
                             return;
                         }
 
-                        this.displayedAmount = this.depositsStore.getPrimaryBalance(user.id ?? null, this.currentAccount);
+                        this.displayedAmount = this.currentAccount.amount;
                     },
                     error: () => {
                         this.statusMessage = 'Could not load account details.';

@@ -7,6 +7,7 @@ import lombok.Setter;
 import com.aciworldwide.aclabs26.enums.UserRole;
 
 import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @AllArgsConstructor
@@ -19,8 +20,12 @@ public class UserModel {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
     private String name;
+    private String firstName;
+    private String lastName;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
     private Long accountId;
+    private boolean passwordChangeRequired;
 
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.User;

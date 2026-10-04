@@ -2,11 +2,13 @@ export interface TransactionModel {
     id: number,
     amount: number,
     cardNumber: string,
-    returnCode: number,
+    returnCode: number | string,
     timestamp: string,
     status?: 'completed' | 'pending' | 'processing',
     scheduledAt?: string,
-    localId?: string
+    localId?: string,
+    transactionType?: string,
+    counterpartyIban?: string
 }
 
 export const TRANSACTION_STATUS_LABELS: Record<string, string> = {

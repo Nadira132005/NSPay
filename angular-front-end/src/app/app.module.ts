@@ -24,6 +24,7 @@ import { AnalystAccountsComponent } from './analyst/analyst-accounts/analyst-acc
 import { AnalystUsersComponent } from './analyst/analyst-users/analyst-users.component';
 import { AnalystPagePanelComponent } from './analyst/analyst-page-panel/analyst-page-panel.component';
 import { AnalystAuditComponent } from './analyst/analyst-audit/analyst-audit.component';
+import { ChangePasswordComponent } from './change-password/change-password.component';
 
 @NgModule({
   declarations: [
@@ -41,7 +42,8 @@ import { AnalystAuditComponent } from './analyst/analyst-audit/analyst-audit.com
     AnalystAccountsComponent,
     AnalystUsersComponent,
     AnalystPagePanelComponent,
-    AnalystAuditComponent
+    AnalystAuditComponent,
+    ChangePasswordComponent
   ],
     imports: [
         BrowserModule,

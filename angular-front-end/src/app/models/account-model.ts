@@ -1,6 +1,7 @@
 export interface AccountModel {
     id: number,
     cardNumber: string,
+    iban: string,
     cardHolderName: string
     status?: string,
     amount: number,

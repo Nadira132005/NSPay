@@ -54,7 +54,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         Claims claims = jwtService.parseToken(token);
+        boolean passwordChangeRequired = Boolean.TRUE.equals(claims.get("passwordChangeRequired", Boolean.class));
+        if (passwordChangeRequired && !("PUT".equalsIgnoreCase(request.getMethod())
+                && "/api/users/me/password".equals(request.getRequestURI()))) {
+            response.sendError(HttpStatus.FORBIDDEN.value(), "Password change is required before using this account");
+            return;
+        }
         request.setAttribute("authenticatedUserId", claims.get("userId"));
+        request.setAttribute("passwordChangeRequired", passwordChangeRequired);
         request.setAttribute("authenticatedRole", claims.get("role"));
         request.setAttribute("authenticatedName", claims.getSubject());
 

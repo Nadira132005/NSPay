@@ -1,35 +1,55 @@
-<div class="login-wrapper">
-    <form #loginForm="ngForm" (ngSubmit)="onSubmit()" class="login">
+<main class="login-page">
+    <section class="login-shell" aria-label="Payments Console sign in">
+        <aside class="welcome-panel">
+            <div class="brand-mark" aria-hidden="true">P</div>
+            <p class="eyebrow">Payments Console</p>
+            <h1>Simple, secure<br>payment management.</h1>
+            <p class="welcome-copy">Your accounts and transactions, together in one clear view.</p>
+            <div class="welcome-decoration" aria-hidden="true">
+                <span class="orbit orbit-one"></span>
+                <span class="orbit orbit-two"></span>
+                <span class="orbit orbit-three"></span>
+                <span class="decoration-dot"></span>
+            </div>
+            <p class="panel-footer">A clearer way to manage your money.</p>
+        </aside>
 
-        <label class="title">
-            <h3 class="welcome">Welcome to  Payments Console</h3>
-            <h5 class="hint">Use your credentials to sign in</h5>
-        </label>
+        <section class="form-panel">
+            <form #loginForm="ngForm" (ngSubmit)="onSubmit()" class="login-form">
+                <div class="form-heading">
+                    <p class="form-kicker">Welcome back</p>
+                    <h2>Sign in to your account</h2>
+                    <p class="form-subtitle">Enter your details below to continue.</p>
+                </div>
 
-        <div class="login-group">
+                <div class="field-group">
+                    <label for="login_username">Username</label>
+                    <input required autocomplete="username"
+                           name="username"
+                           [(ngModel)]="user.name"
+                           type="text"
+                           id="login_username"
+                           placeholder="Your username">
+                </div>
 
-            <input required class="username"
-                   name="username"
-                   [(ngModel)]="user.name"
-                   type="text"
-                   id="login_username"
-                   placeholder="Username">
+                <div class="field-group">
+                    <label for="login_password">Password</label>
+                    <input required autocomplete="current-password"
+                           name="password"
+                           [(ngModel)]="user.password"
+                           type="password"
+                           id="login_password"
+                           placeholder="Your password">
+                </div>
 
-            <input required class="password"
-                   name="password"
-                   [(ngModel)]="user.password"
-                   type="password"
-                   id="login_password"
-                   placeholder="Password">
+                <button type="submit" class="login-button" [disabled]="loginForm.form.invalid">
+                    <span>Sign in</span>
+                    <span class="button-arrow" aria-hidden="true">→</span>
+                </button>
 
-            <button type="submit"
-                    class="btn btn-primary"
-                    [disabled]="loginForm.form.invalid">
-                Login
-            </button>
-        </div>
-
-        <p class="status" *ngIf="statusMessage">{{ statusMessage }}</p>
-
-    </form>
-</div>
+                <p class="status" role="alert" *ngIf="statusMessage">{{ statusMessage }}</p>
+                <p class="secure-note"><span aria-hidden="true">◆</span> Your information is protected and secure</p>
+            </form>
+        </section>
+    </section>
+</main>

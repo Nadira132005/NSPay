@@ -33,6 +33,10 @@ export class LoginComponent implements OnInit {
     if (!this.userService.isLoggedIn()) {
       return;
     }
+    if (this.userService.isPasswordChangeRequired()) {
+      this.router.navigateByUrl('/change-password');
+      return;
+    }
     this.router.navigateByUrl('/dashboard/accounts');
   }
 }

@@ -11,4 +11,5 @@ public class LoginResponseDTO {
     private Long userId;
     private UserRole role;
     private String name;
+    private boolean passwordChangeRequired;
 }

@@ -3,7 +3,7 @@
         <div>
             <p class="section-label">Deposits page</p>
             <h1>{{ currentUserName || 'Deposits' }}</h1>
-            <p class="subtitle">Manage the primary account and the deposits that belong to the same user.</p>
+            <p class="subtitle">Manage the deposit pockets saved in this browser. Transfers use the account balance shown on the Account page.</p>
         </div>
 
         <div class="summary" *ngIf="primaryDeposit; else missingAccount">

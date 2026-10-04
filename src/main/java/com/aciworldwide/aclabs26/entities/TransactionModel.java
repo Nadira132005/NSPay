@@ -22,5 +22,15 @@ public class TransactionModel {
     private Double amount;
     private Timestamp timestamp;
     private String returnCode;
+    private String transactionType;
+    private String counterpartyIban;
+
+    public TransactionModel(long id, String cardNumber, Double amount, Timestamp timestamp, String returnCode) {
+        this.id = id;
+        this.cardNumber = cardNumber;
+        this.amount = amount;
+        this.timestamp = timestamp;
+        this.returnCode = returnCode;
+    }
 
 }

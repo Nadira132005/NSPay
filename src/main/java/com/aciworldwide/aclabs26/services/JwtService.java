@@ -35,6 +35,7 @@ public class JwtService {
                 .setSubject(userModel.getName())
                 .claim("userId", userModel.getId())
                 .claim("role", userModel.getRole() == null ? "User" : userModel.getRole().name())
+                .claim("passwordChangeRequired", userModel.isPasswordChangeRequired())
                 .setIssuedAt(new Date(now))
                 .setExpiration(new Date(now + expirationMs));
 

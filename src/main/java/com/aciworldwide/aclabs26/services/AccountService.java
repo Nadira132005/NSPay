@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class AccountService {
@@ -30,7 +32,15 @@ public class AccountService {
 
     public ResponseEntity<?> getAllAccounts() {
         logger.info("Fetching all accounts from repository");
-        return new ResponseEntity<>(accountRepository.findAll(), new HttpHeaders(), HttpStatus.OK);
+        List<AccountModel> accounts = new ArrayList<>();
+        accountRepository.findAll().forEach(account -> {
+            if (account.getIban() == null || account.getIban().trim().isEmpty()) {
+                account.setIban(generateUniqueIban());
+                accountRepository.save(account);
+            }
+            accounts.add(account);
+        });
+        return new ResponseEntity<>(accounts, new HttpHeaders(), HttpStatus.OK);
     }
 
     public ResponseEntity<?> getAccountById(long id) {
@@ -101,6 +111,9 @@ public class AccountService {
 
     private void apply(AccountModel account, AccountDTO accountDTO) {
         account.setCardNumber(accountDTO.getCardNumber());
+        if (account.getIban() == null || account.getIban().trim().isEmpty()) {
+            account.setIban(generateUniqueIban());
+        }
         account.setCardHolderName(accountDTO.getCardHolderName());
         if (accountDTO.getStatus() != null) {
             account.setStatus(accountDTO.getStatus());
@@ -110,5 +123,13 @@ public class AccountService {
         account.setDailyTxSumLimit(accountDTO.getDailyTxSumLimit());
         account.setDailyTx(accountDTO.getDailyTx());
         account.setDailyTxSum(accountDTO.getDailyTxSum());
+    }
+
+    private String generateUniqueIban() {
+        String iban;
+        do {
+            iban = IbanGenerator.generate();
+        } while (accountRepository.existsByIban(iban));
+        return iban;
     }
 }

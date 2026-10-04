@@ -16,10 +16,12 @@ import {AnalystAccountsComponent} from "./analyst/analyst-accounts/analyst-accou
 import {AnalystUsersComponent} from "./analyst/analyst-users/analyst-users.component";
 import {AnalystPagePanelComponent} from "./analyst/analyst-page-panel/analyst-page-panel.component";
 import {AnalystAuditComponent} from "./analyst/analyst-audit/analyst-audit.component";
+import {ChangePasswordComponent} from "./change-password/change-password.component";
 
 export const ROUTES: Routes = [
     {path: '', component: LoginComponent},
     {path: 'login', component: LoginComponent},
+    {path: 'change-password', component: ChangePasswordComponent},
     {
         path: 'dashboard',
         component: DashboardComponent,

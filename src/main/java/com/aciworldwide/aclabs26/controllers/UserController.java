@@ -1,6 +1,8 @@
 package com.aciworldwide.aclabs26.controllers;
 
 import com.aciworldwide.aclabs26.entities.UserModel;
+import com.aciworldwide.aclabs26.dto.ChangePasswordDTO;
+import com.aciworldwide.aclabs26.dto.LoginResponseDTO;
 import com.aciworldwide.aclabs26.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,6 +51,16 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current user is not available");
         }
         return ResponseEntity.ok(userService.getCurrentUser(currentName));
+    }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<LoginResponseDTO> changeOwnPassword(@RequestBody ChangePasswordDTO body,
+                                                               HttpServletRequest request) {
+        Number userId = (Number) request.getAttribute("authenticatedUserId");
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Current user is not available");
+        }
+        return ResponseEntity.ok(userService.changePassword(userId.longValue(), body.getPassword()));
     }
 
     @DeleteMapping("/{id}")

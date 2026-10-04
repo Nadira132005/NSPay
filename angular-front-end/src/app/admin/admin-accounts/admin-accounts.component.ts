@@ -28,6 +28,7 @@ export class AdminAccountsComponent implements OnInit {
     displayedColumns: string[] = [
         'id',
         'cardNumber',
+        'iban',
         'cardHolderName',
         'status',
         'amount',

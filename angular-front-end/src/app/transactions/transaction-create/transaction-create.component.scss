@@ -38,6 +38,16 @@ h1 {
     color: #6b7280;
 }
 
+.account-iban {
+    margin: 12px 0 0;
+    color: #475569;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.account-iban strong { font-size: 12px; }
+.incoming-amount { color: #047857; font-weight: 700; }
+
 .status-line {
     margin: 6px 0 0;
     font-size: 13px;

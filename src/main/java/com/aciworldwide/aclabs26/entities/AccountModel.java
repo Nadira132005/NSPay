@@ -18,6 +18,9 @@ public class AccountModel {
     @Column(unique = true)
     private String cardNumber;
 
+    @Column(unique = true, length = 34)
+    private String iban;
+
     private String cardHolderName;
     @Enumerated(EnumType.STRING)
     private AccountStatus status = AccountStatus.ACTIVE;

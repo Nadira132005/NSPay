@@ -13,6 +13,10 @@ export const authorizationGuard: CanActivateFn = (route: ActivatedRouteSnapshot)
     return router.parseUrl('/');
   }
 
+  if (userService.isPasswordChangeRequired()) {
+    return router.parseUrl('/change-password');
+  }
+
   if (!requiredRoles || requiredRoles.length === 0) {
     return true;
   }

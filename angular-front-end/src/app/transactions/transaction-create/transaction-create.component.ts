@@ -24,10 +24,11 @@ export class TransactionCreateComponent implements OnInit, AfterViewInit, OnDest
     currentAccount: AccountModel | null = null;
     dataSource = new MatTableDataSource<TransactionModel>([]);
     pageSize = 10;
-    displayedColumns: string[] = ['number', 'amount', 'cardNumber', 'state', 'timestamp'];
+    displayedColumns: string[] = ['number', 'type', 'amount', 'counterparty', 'state', 'timestamp'];
     transactionsLoaded = false;
     transaction = {
         amount: null as number | null,
+        recipientIban: '',
         moment: 'now' as 'now' | 'scheduled',
         scheduledAt: this.toLocalDateTimeValue(new Date())
     };
@@ -105,6 +106,18 @@ export class TransactionCreateComponent implements OnInit, AfterViewInit, OnDest
         return this.getTransactionStatusClass(row.returnCode);
     }
 
+    getTransactionTypeLabel(row: TransactionModel): string {
+        if (row.status === 'pending' || row.status === 'processing') return 'Scheduled transfer';
+        if (row.transactionType === 'TRANSFER_IN') return 'Received';
+        if (row.transactionType === 'TRANSFER_OUT') return 'Sent';
+        return 'Card payment';
+    }
+
+    formatAmount(row: TransactionModel): string {
+        const sign = row.transactionType === 'TRANSFER_IN' ? '+' : '-';
+        return `${sign}${Number(row.amount).toFixed(2)}`;
+    }
+
     formatTimestamp(row: TransactionModel): string {
         return row.status === 'pending' || row.status === 'processing'
             ? (row.scheduledAt ?? row.timestamp)
@@ -126,6 +139,16 @@ export class TransactionCreateComponent implements OnInit, AfterViewInit, OnDest
             return;
         }
 
+        const recipientIban = this.transaction.recipientIban.replace(/\s+/g, '').toUpperCase();
+        if (!recipientIban) {
+            this.statusMessage = 'Enter the recipient IBAN.';
+            return;
+        }
+        if (recipientIban === this.currentAccount?.iban) {
+            this.statusMessage = 'Choose an IBAN different from your own.';
+            return;
+        }
+
         if (this.transaction.amount == null || this.transaction.amount <= 0) {
             this.statusMessage = 'Amount must be greater than zero.';
             return;
@@ -139,12 +162,14 @@ export class TransactionCreateComponent implements OnInit, AfterViewInit, OnDest
         if (this.transaction.moment === 'scheduled') {
             this.pendingTransactionsService.add({
                 cardNumber: this.currentAccountCardNumber,
+                recipientIban,
                 amount: this.transaction.amount,
                 scheduledAt: timestamp
             });
 
             this.statusMessage = 'Scheduled transaction added as pending.';
             this.transaction.amount = null;
+            this.transaction.recipientIban = '';
             this.transaction.moment = 'now';
             this.transaction.scheduledAt = this.toLocalDateTimeValue(new Date());
             this.trackAudit('ACTION: Schedule transaction');
@@ -153,9 +178,8 @@ export class TransactionCreateComponent implements OnInit, AfterViewInit, OnDest
         }
 
         this.submitToBackend({
-            cardNumber: this.currentAccountCardNumber,
+            recipientIban,
             amount: this.transaction.amount,
-            timestamp
         });
     }
 
@@ -222,20 +246,19 @@ export class TransactionCreateComponent implements OnInit, AfterViewInit, OnDest
         });
     }
 
-    private submitToBackend(payload: { cardNumber: string; amount: number; timestamp: string }): void {
-        this.frontEndService.createTransaction(payload).subscribe({
+    private submitToBackend(payload: { recipientIban: string; amount: number }): void {
+        this.frontEndService.transfer(payload).subscribe({
             next: (response) => {
-                const label = response?.message ?? response?.code ?? 'OK';
-                const prefix = response?.businessLogicViolation ? 'Unsuccessful transaction' : 'Successful transaction';
-                this.statusMessage = `${prefix}: ${label}`;
+                this.statusMessage = `Transfer of ${Number(response.amount).toFixed(2)} completed. New balance: ${Number(response.remainingBalance).toFixed(2)}.`;
                 this.transaction.amount = null;
+                this.transaction.recipientIban = '';
                 this.transaction.moment = 'now';
                 this.transaction.scheduledAt = this.toLocalDateTimeValue(new Date());
                 this.trackAudit('ACTION: Create transaction');
                 this.loadCurrentAccount();
             },
-            error: () => {
-                this.statusMessage = 'Could not create transaction.';
+            error: (error) => {
+                this.statusMessage = error?.error?.message || error?.error?.detail || 'Could not complete the transfer.';
             }
         });
     }
@@ -258,6 +281,8 @@ export class TransactionCreateComponent implements OnInit, AfterViewInit, OnDest
             cardNumber: transaction.cardNumber,
             returnCode: Number.NaN,
             timestamp: transaction.createdAt,
+            transactionType: 'TRANSFER_OUT',
+            counterpartyIban: transaction.recipientIban,
             status: transaction.status,
             scheduledAt: transaction.scheduledAt,
             localId: transaction.localId
@@ -302,10 +327,9 @@ export class TransactionCreateComponent implements OnInit, AfterViewInit, OnDest
             }
 
             this.pendingTransactionsService.markProcessing(transaction.localId);
-            this.frontEndService.createTransaction({
-                cardNumber: transaction.cardNumber,
+            this.frontEndService.transfer({
+                recipientIban: transaction.recipientIban,
                 amount: transaction.amount,
-                timestamp: transaction.scheduledAt
             }).subscribe({
                 next: () => {
                     this.pendingTransactionsService.remove(transaction.localId);

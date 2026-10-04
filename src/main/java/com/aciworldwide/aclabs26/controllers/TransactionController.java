@@ -3,6 +3,8 @@ package com.aciworldwide.aclabs26.controllers;
 import com.aciworldwide.aclabs26.dto.TransactionDTO;
 import com.aciworldwide.aclabs26.entities.TransactionModel;
 import com.aciworldwide.aclabs26.services.TransactionService;
+import com.aciworldwide.aclabs26.services.TransferService;
+import com.aciworldwide.aclabs26.dto.TransferRequestDTO;
 import com.aciworldwide.aclabs26.validators.ValidationResults;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @RestController
@@ -25,9 +28,22 @@ public class TransactionController {
     private static final Logger logger = LogManager.getLogger(TransactionController.class);
 
     private final TransactionService transactionService;
+    private final TransferService transferService;
 
-    public TransactionController(TransactionService transactionService) {
+    public TransactionController(TransactionService transactionService, TransferService transferService) {
         this.transactionService = transactionService;
+        this.transferService = transferService;
+    }
+
+    @PostMapping("/api/transfers")
+    @Operation(summary = "Transfer money to another account by IBAN")
+    public ResponseEntity<?> transfer(@Valid @RequestBody TransferRequestDTO request,
+                                      HttpServletRequest httpRequest) {
+        Number userId = (Number) httpRequest.getAttribute("authenticatedUserId");
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return ResponseEntity.ok(transferService.transfer(userId.longValue(), request));
     }
 
     @PostMapping({"/transaction", "/api/accounts/transaction"})

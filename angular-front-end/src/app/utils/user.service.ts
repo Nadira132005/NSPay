@@ -22,6 +22,10 @@ export class UserService {
         return this.http.post<LoginResponseModel>(`/api/login/`, userData);
     }
 
+    changePassword(password: string): Observable<LoginResponseModel> {
+        return this.http.put<LoginResponseModel>('/api/users/me/password', { password });
+    }
+
     createUser(userData: UserModel) {
         const headers = new HttpHeaders({
             'userRole': this.getCurrentRole() ?? ''// missing role => empty string
@@ -49,8 +53,18 @@ export class UserService {
     }
 
     toHomePage(resData: LoginResponseModel) {
+        this.storeLogin(resData);
+        this.router.navigateByUrl(resData.passwordChangeRequired ? '/change-password' : '/dashboard/accounts');
+    }
+
+    storeLogin(resData: LoginResponseModel) {
         this.setCookie(this.tokenCookieName, resData.token, 1);
-        this.router.navigateByUrl('/dashboard/accounts')// or navigate(['dashboard', 'accounts']);
+    }
+
+    isPasswordChangeRequired(): boolean {
+        const token = this.getAuthToken();
+        if (!token || this.isJwtExpired(token)) return false;
+        return this.decodeJwtPayload(token)?.passwordChangeRequired === true;
     }
 
     getCurrentRole(): UserRole | null {

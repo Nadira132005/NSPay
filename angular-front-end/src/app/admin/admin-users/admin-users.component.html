@@ -1,17 +1,22 @@
 <div class="dashboard">
     <h1>User management</h1>
-    <p class="subtitle">Create new platform users and assign the permissions they need.</p>
+    <p class="subtitle">Each user needs a separate account and IBAN. The temporary password is the username.</p>
 
     <section class="panel">
         <form #adminForm="ngForm" (ngSubmit)="createUser()" class="user-form">
             <label>
-                <span>Name</span>
-                <input name="name" required [(ngModel)]="user.name" type="text" placeholder="New user name">
+                <span>Username</span>
+                <input name="name" required [(ngModel)]="user.name" type="text" placeholder="Username">
             </label>
 
             <label>
-                <span>Password</span>
-                <input name="password" required [(ngModel)]="user.password" type="password" placeholder="Temporary password">
+                <span>First name</span>
+                <input name="firstName" required [(ngModel)]="user.firstName" type="text" placeholder="First name">
+            </label>
+
+            <label>
+                <span>Last name</span>
+                <input name="lastName" required [(ngModel)]="user.lastName" type="text" placeholder="Last name">
             </label>
 
             <label>
@@ -27,7 +32,7 @@
                 <select name="accountId" required [(ngModel)]="user.accountId">
                     <option [ngValue]="null" disabled>Select account</option>
                     <option *ngFor="let account of accountsData" [ngValue]="account.id">
-                        {{ account.cardHolderName }} - {{ account.cardNumber }}
+                        {{ account.cardHolderName }} - {{ account.iban }}
                     </option>
                 </select>
             </label>
@@ -45,8 +50,13 @@
         </ng-container>
 
         <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef> name </th>
+            <th mat-header-cell *matHeaderCellDef> username </th>
             <td mat-cell *matCellDef="let row"> {{ row.name }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="fullName">
+            <th mat-header-cell *matHeaderCellDef> full name </th>
+            <td mat-cell *matCellDef="let row"> {{ row.firstName }} {{ row.lastName }} </td>
         </ng-container>
 
         <ng-container matColumnDef="role">
@@ -58,9 +68,8 @@
             <th mat-header-cell *matHeaderCellDef> account </th>
             <td mat-cell *matCellDef="let row">
                 <select [(ngModel)]="row.accountId" [ngModelOptions]="{standalone: true}" (ngModelChange)="updateUserAccount(row)">
-                    <option [ngValue]="null">No account</option>
                     <option *ngFor="let account of accountsData" [ngValue]="account.id">
-                        {{ account.cardHolderName }} - {{ account.cardNumber }}
+                        {{ account.cardHolderName }} - {{ account.iban }}
                     </option>
                 </select>
             </td>
@@ -73,8 +82,8 @@
             </td>
         </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="['id', 'name', 'role', 'account', 'actions']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['id', 'name', 'role', 'account', 'actions'];"></tr>
+        <tr mat-header-row *matHeaderRowDef="['id', 'name', 'fullName', 'role', 'account', 'actions']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['id', 'name', 'fullName', 'role', 'account', 'actions'];"></tr>
     </table>
 
     <div class="modal-backdrop" *ngIf="deleteConfirmOpen">

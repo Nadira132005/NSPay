@@ -14,6 +14,8 @@ export class AdminUsersComponent implements OnInit {
     user: UserModel = {
         name: '',
         password: '',
+        firstName: '',
+        lastName: '',
         accountId: null
     };
 
@@ -40,10 +42,12 @@ export class AdminUsersComponent implements OnInit {
         this.userService.createUser(this.user).subscribe({
             next: () => {
                 this.trackAudit('ACTION: Create user');
-                this.statusMessage = `User "${this.user.name}" was created.`;
+                this.statusMessage = `User "${this.user.name}" was created. Their temporary password is their username.`;
                 this.user = {
                     name: '',
                     password: '',
+                    firstName: '',
+                    lastName: '',
                     accountId: this.accountsData[0]?.id ?? null
                 };
                 this.loadUsers();
@@ -55,7 +59,7 @@ export class AdminUsersComponent implements OnInit {
                     return;
                 }
                 if (error?.status === 409) {
-                    this.statusMessage = 'User name already exists.';
+                    this.statusMessage = 'That username is taken or the selected account is already assigned.';
                     return;
                 }
                 this.statusMessage = 'Could not create user.';

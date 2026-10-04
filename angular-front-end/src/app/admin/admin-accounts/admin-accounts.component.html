@@ -44,6 +44,11 @@
         <td mat-cell *matCellDef="let row"> {{ row.cardNumber }} </td>
     </ng-container>
 
+    <ng-container matColumnDef="iban">
+        <th mat-header-cell *matHeaderCellDef> IBAN </th>
+        <td mat-cell *matCellDef="let row"> {{ row.iban }} </td>
+    </ng-container>
+
     <ng-container matColumnDef="cardHolderName">
         <th mat-header-cell *matHeaderCellDef> cardHolderName </th>
         <td mat-cell *matCellDef="let row"> {{ row.cardHolderName }} </td>

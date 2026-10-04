@@ -38,6 +38,10 @@ export class FrontEndService {
         return this._httpClient.post<any>('/api/accounts/transaction', transaction);
     }
 
+    transfer(payload: { recipientIban: string; amount: number }): Observable<any> {
+        return this._httpClient.post<any>('/api/transfers', payload);
+    }
+
     getTransactions(): Observable<TransactionModel[]> {
         return this._httpClient.get<TransactionModel[]>('/api/accounts/transactions/');
     }

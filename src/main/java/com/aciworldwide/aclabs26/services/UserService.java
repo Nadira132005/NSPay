@@ -36,7 +36,7 @@ public class UserService {
     @Transactional
     public LoginResponseDTO loginUser(UserModel userModel) {
         UserModel existingUser = userRepository.findByName(userModel.getName());
-        log.info(existingUser);
+        log.info("Login user found: {}", existingUser.getName());
         if (existingUser == null) {
             return null;
         }
@@ -60,15 +60,26 @@ public class UserService {
 
         String token = jwtService.generateToken(existingUser, accountCardNumber);
         UserRole role = existingUser.getRole() == null ? UserRole.User : existingUser.getRole();
-        return new LoginResponseDTO(token, existingUser.getId(), role, existingUser.getName());
+        return new LoginResponseDTO(token, existingUser.getId(), role, existingUser.getName(), existingUser.isPasswordChangeRequired());
     }
     @Transactional
     public UserModel createUser(UserModel userModel) {
+        if (userModel.getName() != null) userModel.setName(userModel.getName().trim());
+        if (userModel.getFirstName() != null) userModel.setFirstName(userModel.getFirstName().trim());
+        if (userModel.getLastName() != null) userModel.setLastName(userModel.getLastName().trim());
+        if (userModel.getName() == null || userModel.getName().trim().isEmpty()
+                || userModel.getFirstName() == null || userModel.getFirstName().trim().isEmpty()
+                || userModel.getLastName() == null || userModel.getLastName().trim().isEmpty()
+                || userModel.getAccountId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username, first name, last name and account are required");
+        }
         if (userRepository.existsByName(userModel.getName())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "User name already exists");
         }
         applyAccount(userModel.getAccountId());
-        userModel.setPassword(passwordEncoder.encode(userModel.getPassword()));
+        ensureAccountNotAssigned(userModel.getAccountId(), null);
+        userModel.setPassword(passwordEncoder.encode(userModel.getName()));
+        userModel.setPasswordChangeRequired(true);
         return userRepository.save(userModel);
     }
 
@@ -76,9 +87,35 @@ public class UserService {
     public UserModel updateUser(long id, UserModel userModel) {
         UserModel existingUser = userRepository.findById(id).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "User with id " + id + " is not found"));
+        if (userModel.getAccountId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each user must have an account and IBAN");
+        }
         applyAccount(userModel.getAccountId());
+        ensureAccountNotAssigned(userModel.getAccountId(), id);
         existingUser.setAccountId(userModel.getAccountId());
+        existingUser.setFirstName(userModel.getFirstName());
+        existingUser.setLastName(userModel.getLastName());
         return userRepository.save(existingUser);
+    }
+
+    @Transactional
+    public LoginResponseDTO changePassword(long userId, String newPassword) {
+        if (newPassword == null || newPassword.trim().length() < 8) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must contain at least 8 characters");
+        }
+        UserModel user = userRepository.findById(userId).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Signed-in user was not found"));
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPasswordChangeRequired(false);
+        userRepository.save(user);
+        String cardNumber = null;
+        if (user.getAccountId() != null) {
+            AccountModel account = accountRepository.findById(user.getAccountId()).orElse(null);
+            cardNumber = account == null ? null : account.getCardNumber();
+        }
+        UserRole role = user.getRole() == null ? UserRole.User : user.getRole();
+        return new LoginResponseDTO(jwtService.generateToken(user, cardNumber), user.getId(), role,
+                user.getName(), false);
     }
 
     @Transactional
@@ -111,6 +148,16 @@ public class UserService {
         }
         if (!accountRepository.existsById(accountId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Account with id " + accountId + " is not found");
+        }
+    }
+
+    private void ensureAccountNotAssigned(Long accountId, Long exceptUserId) {
+        if (accountId == null) return;
+        boolean alreadyAssigned = exceptUserId == null
+                ? userRepository.existsByAccountId(accountId)
+                : userRepository.existsByAccountIdAndIdNot(accountId, exceptUserId);
+        if (alreadyAssigned) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Each user must have a separate account and IBAN");
         }
     }
 }
