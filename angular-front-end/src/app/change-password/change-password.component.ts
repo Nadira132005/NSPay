@@ -15,7 +15,7 @@ export class ChangePasswordComponent {
 
     constructor(private userService: UserService, private router: Router) {
         if (!this.userService.isLoggedIn() || !this.userService.isPasswordChangeRequired()) {
-            this.router.navigateByUrl('/dashboard/accounts');
+            this.router.navigateByUrl('/dashboard/overview');
         }
     }
 
@@ -33,7 +33,7 @@ export class ChangePasswordComponent {
         this.userService.changePassword(this.password).subscribe({
             next: response => {
                 this.userService.storeLogin(response);
-                this.router.navigateByUrl('/dashboard/accounts');
+                this.router.navigateByUrl('/dashboard/overview');
             },
             error: () => {
                 this.saving = false;

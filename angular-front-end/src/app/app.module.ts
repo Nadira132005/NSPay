@@ -14,11 +14,12 @@ import { AdminUsersComponent } from './admin/admin-users/admin-users.component';
 import { AdminPageComponent } from './admin/admin-page/admin-page.component';
 import { AdminAccountsComponent } from './admin/admin-accounts/admin-accounts.component';
 import { AdminPagePanelComponent } from './admin/admin-page-panel/admin-page-panel.component';
-import { TransactionCreateComponent } from './transactions/transaction-create/transaction-create.component';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatSliderModule } from '@angular/material/slider';
-import { DepositsPageComponent } from './deposits-page/deposits-page.component';
 import { AnalystPageComponent } from './analyst/analyst-page/analyst-page.component';
 import { AnalystAccountsComponent } from './analyst/analyst-accounts/analyst-accounts.component';
 import { AnalystUsersComponent } from './analyst/analyst-users/analyst-users.component';
@@ -36,8 +37,6 @@ import { ChangePasswordComponent } from './change-password/change-password.compo
     AdminPageComponent,
     AdminAccountsComponent,
     AdminPagePanelComponent,
-    TransactionCreateComponent,
-    DepositsPageComponent,
     AnalystPageComponent,
     AnalystAccountsComponent,
     AnalystUsersComponent,
@@ -47,6 +46,7 @@ import { ChangePasswordComponent } from './change-password/change-password.compo
   ],
     imports: [
         BrowserModule,
+        MatButtonModule, MatFormFieldModule, MatInputModule,
         BrowserAnimationsModule,
         MatTableModule,
         MatPaginatorModule,

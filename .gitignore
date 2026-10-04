@@ -29,3 +29,4 @@ target/
 openapi.json
 logs/
 angular-front-end/dist/
+__pycache__/

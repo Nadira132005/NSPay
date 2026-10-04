@@ -9,8 +9,6 @@ import {AdminUsersComponent} from "./admin/admin-users/admin-users.component";
 import {AdminPageComponent} from "./admin/admin-page/admin-page.component";
 import {AdminAccountsComponent} from "./admin/admin-accounts/admin-accounts.component";
 import {AdminPagePanelComponent} from "./admin/admin-page-panel/admin-page-panel.component";
-import {TransactionCreateComponent} from "./transactions/transaction-create/transaction-create.component";
-import {DepositsPageComponent} from "./deposits-page/deposits-page.component";
 import {AnalystPageComponent} from "./analyst/analyst-page/analyst-page.component";
 import {AnalystAccountsComponent} from "./analyst/analyst-accounts/analyst-accounts.component";
 import {AnalystUsersComponent} from "./analyst/analyst-users/analyst-users.component";
@@ -28,30 +26,17 @@ export const ROUTES: Routes = [
         canActivate: [authorizationGuard],
         data: {roles: ['Admin', 'User', 'Analyst']},
         children: [
-            {path: '', pathMatch: 'full', redirectTo: 'accounts'},
-            {path: 'accounts', component: AccountsTableComponent, data: {roles: ['Admin', 'User', 'Analyst']}},
-            {path: 'deposits', component: DepositsPageComponent, data: {roles: ['Admin', 'User', 'Analyst']}},
-            {path: 'transactions', component: TransactionCreateComponent, data: {roles: ['Admin', 'User', 'Analyst']}},
+            {path: '', pathMatch: 'full', redirectTo: 'overview'},
+            ...['overview', 'savings', 'payments', 'trading', 'credit', 'security', 'onboarding'].map(section => ({path: section, loadChildren: () => import('./finance/finance.module').then(m => m.FinanceModule), data: {section}})),
+            {path: 'accounts', redirectTo: 'overview', pathMatch: 'full'},
+            {path: 'deposits', redirectTo: 'savings', pathMatch: 'full'},
+            {path: 'transactions', redirectTo: 'payments', pathMatch: 'full'},
             {path: 'users', component: AdminUsersComponent, canActivate: [authorizationGuard], data: {roles: ['Admin']}},
-            {
-                path: 'admin',
-                component: AdminPageComponent,
-                canActivate: [authorizationGuard],
-                data: {roles: ['Admin']},
-                children: [
-                    {path: '', pathMatch: 'full', redirectTo: 'accounts'},
-                    {path: 'accounts', component: AdminAccountsComponent, data: {roles: ['Admin']}},
-                    {
-                        path: 'transactions',
-                        component: AdminPagePanelComponent,
-                        data: {
-                            roles: ['Admin']
-
-                        }
-                    },
-                    {path: 'users', component: AdminUsersComponent, data: {roles: ['Admin']}},
-                ]
-            },
+            {path: 'admin', pathMatch: 'full', loadChildren: () => import('./finance/finance.module').then(m => m.FinanceModule), canActivate: [authorizationGuard], data: {roles: ['Admin'], section: 'admin'}},
+            {path: 'admin/create-account', component: AdminAccountsComponent, canActivate: [authorizationGuard], data: {roles: ['Admin']}},
+            {path: 'admin/accounts', redirectTo: 'admin', pathMatch: 'full'},
+            {path: 'admin/users', component: AdminUsersComponent, canActivate: [authorizationGuard], data: {roles: ['Admin']}},
+            {path: 'admin/transactions', component: AdminPagePanelComponent, canActivate: [authorizationGuard], data: {roles: ['Admin']}},
             {
                 path: 'analyst',
                 component: AnalystPageComponent,

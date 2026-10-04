@@ -41,7 +41,7 @@
 
     <ng-container matColumnDef="cardNumber">
         <th mat-header-cell *matHeaderCellDef> cardNumber </th>
-        <td mat-cell *matCellDef="let row"> {{ row.cardNumber }} </td>
+        <td mat-cell *matCellDef="let row"> •••• •••• •••• {{ row.cardNumber.slice(-4) }} </td>
     </ng-container>
 
     <ng-container matColumnDef="iban">
@@ -57,12 +57,7 @@
     <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef> status </th>
         <td mat-cell *matCellDef="let row">
-            <select
-                    [(ngModel)]="row.status"
-                    [ngModelOptions]="{standalone: true}"
-                    (ngModelChange)="updateAccountStatus(row, $event)">
-                <option *ngFor="let status of statuses" [value]="status">{{ status }}</option>
-            </select>
+            <a routerLink="/dashboard/admin">{{ row.status | titlecase }}</a>
         </td>
     </ng-container>
 

@@ -13,7 +13,7 @@ export class AdminAccountsComponent implements OnInit {
     statusMessage = '';
     actionConfirmOpen = false;
     pendingDeleteAccountId: number | null = null;
-    statuses: string[] = ['ACTIVE', 'SUSPENDED', 'BLOCKED', 'CLOSED', 'FROZEN'];
+    statuses: string[] = ['ACTIVE', 'FREEZE', 'SUSPENDED', 'BLOCKED'];
 
     account = {
         cardNumber: '',

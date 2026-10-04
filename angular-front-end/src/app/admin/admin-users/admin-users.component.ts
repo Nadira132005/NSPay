@@ -72,7 +72,7 @@ export class AdminUsersComponent implements OnInit {
             return 'No account';
         }
         const account = this.accountsData.find(item => item.id === accountId);
-        return account ? `${account.cardHolderName} - ${account.cardNumber}` : `Account #${accountId}`;
+        return account ? `${account.cardHolderName} - •••• ${account.cardNumber.slice(-4)}` : `Account #${accountId}`;
     }
 
     deleteUser(id: number) {

@@ -54,7 +54,7 @@ export class UserService {
 
     toHomePage(resData: LoginResponseModel) {
         this.storeLogin(resData);
-        this.router.navigateByUrl(resData.passwordChangeRequired ? '/change-password' : '/dashboard/accounts');
+        this.router.navigateByUrl(resData.passwordChangeRequired ? '/change-password' : '/dashboard/overview');
     }
 
     storeLogin(resData: LoginResponseModel) {
@@ -115,7 +115,7 @@ export class UserService {
         date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
 
         // Set it
-        document.cookie = name+"="+value+"; expires="+date.toUTCString()+"; path=/";
+        document.cookie = name+"="+value+"; expires="+date.toUTCString()+"; path=/; SameSite=Lax" + (location.protocol === 'https:' ? '; Secure' : '');
     }
 
     private getCookie(name: string): string | null {

@@ -1,30 +1,44 @@
-<div class="dashboard">
-    <aside class="sidebar">
-        <h1>Dashboard</h1>
-        <p class="subtitle">Choose where you want to go next.</p>
-
-        <nav class="panel">
-            <a routerLink="/dashboard/accounts">Account page</a>
-            <a routerLink="/dashboard/deposits">Deposits page</a>
-            <a routerLink="/dashboard/transactions">Transaction page</a>
-            <a *ngIf="isAdmin()" routerLink="/dashboard/admin">Admin page</a>
-            <a *ngIf="isAnalyst()" routerLink="/dashboard/analyst">Analyst page</a>
-            <button type="button" class="logout-button" (click)="openLogoutConfirm()">Log Out</button>
-        </nav>
-    </aside>
-
-    <main class="content">
-        <router-outlet></router-outlet>
-    </main>
-
-    <div class="modal-backdrop" *ngIf="logoutConfirmOpen">
-        <div class="modal">
-            <h2>Confirm logout</h2>
-            <p>Ești sigur că vrei să părăsești sesiunea?</p>
-            <div class="modal-actions">
-                <button type="button" class="secondary" (click)="closeLogoutConfirm()">Cancel</button>
-                <button type="button" (click)="confirmLogout()">Confirm</button>
-            </div>
-        </div>
-    </div>
+<div class="app-shell">
+<aside class="sidebar" [class.open]="menuOpen">
+<a class="brand" routerLink="/dashboard/overview">
+<span class="brand-symbol">n.</span>
+<span>NSPay<span class="brand-dot">.</span>
+</span>
+</a>
+<p class="nav-label">ACCOUNTS</p>
+<nav aria-label="Main navigation">
+<a *ngFor="let item of navigation" [routerLink]="'/dashboard/' + item.path" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="menuOpen=false">
+<span aria-hidden="true" class="nav-icon">{{ item.icon }}</span>{{ item.label }}</a>
+</nav>
+<ng-container *ngIf="isAdmin() || isAnalyst()">
+<p class="nav-label">WORKSPACE</p>
+<nav aria-label="Administration">
+<a *ngIf="isAdmin()" routerLink="/dashboard/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="menuOpen=false">
+<span class="nav-icon" aria-hidden="true">▦</span>Administration</a>
+<a *ngIf="isAnalyst()" routerLink="/dashboard/analyst" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" (click)="menuOpen=false">
+<span class="nav-icon" aria-hidden="true">▦</span>Analyst workspace</a>
+</nav>
+</ng-container>
+<div class="sidebar-bottom">
+<button mat-button (click)="userService.logout()">↪ Sign out</button>
+</div>
+</aside>
+<button class="menu-scrim" *ngIf="menuOpen" (click)="menuOpen=false" aria-label="Close navigation">
+</button>
+<div class="main-shell">
+<header class="topbar">
+<button mat-icon-button class="mobile-toggle" (click)="menuOpen=!menuOpen" aria-label="Toggle navigation" [attr.aria-expanded]="menuOpen">☰</button>
+<span class="topbar-label">NSPay <span class="topbar-separator">/</span> <span>{{ userService.getCurrentUserName() }}</span>
+</span>
+<a class="profile-button" routerLink="/dashboard/onboarding">
+<span class="avatar">{{ userService.getCurrentUserName()?.slice(0,1)?.toUpperCase() }}</span>
+<span>{{ userService.getCurrentUserName() }}<small>{{ userService.getCurrentRole() }}</small>
+</span>
+</a>
+</header>
+<main class="content" id="main-content">
+<router-outlet>
+</router-outlet>
+</main>
+</div>
 </div>
