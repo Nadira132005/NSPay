@@ -1,0 +1,14 @@
+[logging]
+level = "debug"
+output = "stdout"
+
+[servers]
+
+[servers.backend]
+bind = "0.0.0.0:8080"
+protocol = "tcp"
+balance = "roundrobin"
+
+[servers.backend.discovery]
+kind = "static"
+static_list = ["backend:8082"]

@@ -113,7 +113,6 @@
       }
     }
   },
-  "defaultProject": "payments-front-end",
   "cli": {
     "analytics": false
   }

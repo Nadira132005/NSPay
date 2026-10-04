@@ -1,0 +1,5 @@
+FROM mysql
+ENV MYSQL_USER=app
+ENV MYSQL_PASSWORD=password
+ENV MYSQL_PORT=jdbc:mysql://127.0.0.1:3307/payments
+EXPOSE 3307
