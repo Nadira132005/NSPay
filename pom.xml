@@ -15,7 +15,7 @@
     <name>nspay</name>
     <description>NSPay local fintech demo</description>
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>17</java.version>
         <log4j2.version>2.14.1</log4j2.version>
     </properties>
     <dependencies>

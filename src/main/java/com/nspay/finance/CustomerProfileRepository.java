@@ -10,6 +10,10 @@ public interface CustomerProfileRepository extends JpaRepository<CustomerProfile
     List<CustomerProfile> findByUserIdOrderByCreatedAtDesc(long userId);
     Optional<CustomerProfile> findByIdAndUserId(long id, long userId);
     Optional<CustomerProfile> findByUserId(long userId);
+    List<CustomerProfile> findTop100ByOrderByCreatedAtDesc();
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select r from CustomerProfile r where r.userId = :userId")
+    Optional<CustomerProfile> lockByUserId(@Param("userId") long userId);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from CustomerProfile r where r.id = :id")
     Optional<CustomerProfile> lockById(@Param("id") long id);

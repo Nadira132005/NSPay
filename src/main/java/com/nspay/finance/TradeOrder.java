@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 @Data
 @EqualsAndHashCode(callSuper=true)
 @Entity
-@Table(name="TRADE_ORDERS")
+@Table(name="TRADE_ORDERS",indexes=@Index(name="idx_trade_owner_time",columnList="userId,createdAt,id"))
 public class TradeOrder extends OwnedRecord {
     private String symbol;
     private String side;
@@ -22,4 +22,5 @@ public class TradeOrder extends OwnedRecord {
     private Instant priceAt;
     private Instant exchangeRateAt;
     private String quoteId;
+    @Column(nullable=false,length=32) private String provider="twelve-data";
 }

@@ -6,7 +6,7 @@ import org.springframework.data.repository.query.Param;
 import javax.persistence.LockModeType;
 import java.util.*;
 import java.time.Instant;
-public interface CreditApplicationRepository extends JpaRepository<CreditApplication, Long> {
+public interface CreditApplicationRepository extends JpaRepository<CreditApplication, Long>,org.springframework.data.jpa.repository.JpaSpecificationExecutor<CreditApplication> {
     List<CreditApplication> findByUserIdOrderByCreatedAtDesc(long userId);
     Optional<CreditApplication> findByIdAndUserId(long id, long userId);
     List<CreditApplication> findTop100ByOrderByCreatedAtDesc();

@@ -10,6 +10,8 @@ public interface CreditDocumentRepository extends JpaRepository<CreditDocument, 
     List<CreditDocument> findByUserIdOrderByCreatedAtDesc(long userId);
     Optional<CreditDocument> findByIdAndUserId(long id, long userId);
     List<CreditDocument> findByApplicationIdAndUserId(long applicationId, long userId);
+    List<CreditDocument> findByUserIdAndApplicationIdIsNullOrderByCreatedAtAsc(long userId);
+    boolean existsByUserIdAndApplicationIdIsNullAndKind(long userId,String kind);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from CreditDocument r where r.id = :id")
     Optional<CreditDocument> lockById(@Param("id") long id);

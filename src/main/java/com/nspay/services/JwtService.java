@@ -48,6 +48,14 @@ public class JwtService {
                 .compact();
     }
 
+    public String renewToken(Claims claims) {
+        long now=System.currentTimeMillis();
+        return Jwts.builder().setClaims(new java.util.HashMap<>(claims))
+            .setIssuedAt(new Date(now)).setExpiration(new Date(now+expirationMs))
+            .signWith(secretKey,SignatureAlgorithm.HS256).compact();
+    }
+    public long getExpirationSeconds(){return expirationMs/1000;}
+
     public Claims parseToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(secretKey)

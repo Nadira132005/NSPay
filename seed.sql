@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS TRANSACTIONS (
     `timestamp` DATETIME(6),
     returnCode VARCHAR(255),
     transactionType VARCHAR(255),
-    counterpartyIban VARCHAR(255)
+    counterpartyIban VARCHAR(255), INDEX idx_transaction_history (cardNumber, `timestamp`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS AUDIT (
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS TRADE_ORDERS (
     userId BIGINT NOT NULL,
     createdAt DATETIME(6) NOT NULL,
     version BIGINT NOT NULL,
-    symbol VARCHAR(255), side VARCHAR(255), quantity DECIMAL(19,6), price DECIMAL(19,6), marketPrice DECIMAL(19,6), exchangeRate DECIMAL(19,8), priceAt DATETIME(6), exchangeRateAt DATETIME(6), quoteId VARCHAR(255), total DECIMAL(19,2), status VARCHAR(255)
+    symbol VARCHAR(255), side VARCHAR(255), quantity DECIMAL(19,6), price DECIMAL(19,6), marketPrice DECIMAL(19,6), exchangeRate DECIMAL(19,8), priceAt DATETIME(6), exchangeRateAt DATETIME(6), quoteId VARCHAR(255), total DECIMAL(19,2), status VARCHAR(255), provider VARCHAR(32) NOT NULL DEFAULT 'twelve-data', INDEX idx_trade_owner_time(userId,createdAt,id)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS CREDIT_APPLICATIONS (
@@ -99,7 +99,8 @@ CREATE TABLE IF NOT EXISTS CUSTOMER_PROFILES (
     userId BIGINT NOT NULL,
     createdAt DATETIME(6) NOT NULL,
     version BIGINT NOT NULL,
-    email VARCHAR(255), phone VARCHAR(255), country VARCHAR(255), dateOfBirth DATE, occupation VARCHAR(255), onboardingStatus VARCHAR(255), UNIQUE (userId)
+    email VARCHAR(255), phone VARCHAR(255), country VARCHAR(255), dateOfBirth DATE, occupation VARCHAR(255), onboardingStatus VARCHAR(255),
+    reviewedBy BIGINT, reviewedAt DATETIME(6), reviewNote VARCHAR(250), UNIQUE (userId)
 ) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS RISK_ASSESSMENTS (
@@ -120,22 +121,55 @@ CREATE TABLE IF NOT EXISTS SECURITY_REPORTS (
  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, userId BIGINT NOT NULL,
  createdAt DATETIME(6) NOT NULL, version BIGINT NOT NULL, transactionId BIGINT NOT NULL UNIQUE,
  reporterId BIGINT NOT NULL, reason VARCHAR(255), status VARCHAR(255), decisionNote VARCHAR(255),
- reviewedBy BIGINT, reviewedAt DATETIME(6), INDEX(userId)
+ reviewedBy BIGINT, reviewedAt DATETIME(6), publicNote VARCHAR(250), privateNote VARCHAR(250), INDEX(userId)
 ) ENGINE=InnoDB;
 CREATE TABLE IF NOT EXISTS STATUS_CHANGES (
  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, userId BIGINT NOT NULL,
  createdAt DATETIME(6) NOT NULL, version BIGINT NOT NULL, actorId BIGINT NOT NULL,
  previousStatus VARCHAR(255), newStatus VARCHAR(255), reason VARCHAR(255), suspendedUntil DATETIME(6),
- suspensionCount INT NOT NULL, INDEX(userId)
+ suspensionCount INT NOT NULL, publicNote VARCHAR(250), privateNote VARCHAR(250), misalignmentScore INT,
+ transactionId BIGINT, INDEX(userId)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS PAYMENT_SIGNALS (
+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, userId BIGINT NOT NULL, createdAt DATETIME(6) NOT NULL, version BIGINT NOT NULL,
+ transactionId BIGINT NOT NULL UNIQUE, username VARCHAR(255), recipientIban VARCHAR(255), transactionType VARCHAR(255), paidAt DATETIME(6), amount DECIMAL(19,2),
+ amountScore INT NOT NULL, timingScore INT NOT NULL, velocityScore INT NOT NULL, recipientScore INT NOT NULL, reportingScore INT NOT NULL, misalignmentScore INT NOT NULL,
+ limitScore INT NOT NULL DEFAULT 0, dailyTx INT NOT NULL DEFAULT 0, dailyTxSum DOUBLE NOT NULL DEFAULT 0, dailyTxLimit INT NOT NULL DEFAULT 0, dailyTxSumLimit DOUBLE NOT NULL DEFAULT 0,
+ historySamples INT NOT NULL, reportCount INT NOT NULL, reported BOOLEAN NOT NULL, reviewStatus VARCHAR(255), reviewedBy BIGINT, reviewedAt DATETIME(6),
+ publicNote VARCHAR(250), privateNote VARCHAR(250), modelVersion VARCHAR(255), decisionScore INT,
+ INDEX idx_payment_score (misalignmentScore), INDEX idx_payment_review (reviewStatus,paidAt), INDEX idx_payment_owner (userId,reviewStatus,id)
 ) ENGINE=InnoDB;
 CREATE TABLE IF NOT EXISTS INVESTMENT_WALLETS (
  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, userId BIGINT NOT NULL UNIQUE,
- createdAt DATETIME(6) NOT NULL, version BIGINT NOT NULL, balance DECIMAL(19,2) NOT NULL
+ createdAt DATETIME(6) NOT NULL, version BIGINT NOT NULL, balance DECIMAL(19,2) NOT NULL, positionsInitialized BOOLEAN NOT NULL DEFAULT FALSE
 ) ENGINE=InnoDB;
 CREATE TABLE IF NOT EXISTS INVESTMENT_COMMANDS (
  id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, userId BIGINT NOT NULL,
  createdAt DATETIME(6) NOT NULL, version BIGINT NOT NULL, requestKey VARCHAR(255),
  fingerprint VARCHAR(255), orderId BIGINT, UNIQUE(userId,requestKey)
+) ENGINE=InnoDB;
+
+-- Current holdings are an accounting projection; order history remains immutable.
+CREATE TABLE IF NOT EXISTS INVESTMENT_POSITIONS (
+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, userId BIGINT NOT NULL,
+ createdAt DATETIME(6) NOT NULL, version BIGINT NOT NULL,
+ provider VARCHAR(32) NOT NULL, symbol VARCHAR(16) NOT NULL,
+ quantity DECIMAL(19,6) NOT NULL, costBasis DECIMAL(25,8) NOT NULL, realizedGain DECIMAL(25,8) NOT NULL,
+ UNIQUE(userId,provider,symbol)
+) ENGINE=InnoDB;
+-- Shared short-lived quote IDs support backend replicas without sticky sessions.
+CREATE TABLE IF NOT EXISTS MARKET_QUOTES (
+ id VARCHAR(36) NOT NULL PRIMARY KEY, provider VARCHAR(32) NOT NULL, symbol VARCHAR(16) NOT NULL,
+ expiresAt DATETIME(6) NOT NULL, payload LONGTEXT NOT NULL,
+ INDEX idx_quote_lookup(provider,symbol,expiresAt), INDEX idx_quote_expiry(expiresAt)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS PORTFOLIO_PERFORMANCE (
+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, userId BIGINT NOT NULL,
+ createdAt DATETIME(6) NOT NULL, version BIGINT NOT NULL, day DATE NOT NULL,
+ totalGain DECIMAL(19,2) NOT NULL, realizedGain DECIMAL(19,2) NOT NULL,
+ unrealizedGain DECIMAL(19,2) NOT NULL, holdingsValue DECIMAL(19,2) NOT NULL,
+ walletVersion BIGINT NOT NULL, UNIQUE(userId,day)
 ) ENGINE=InnoDB;
 
 -- Upgrade existing installations without changing balances or removing order history.
@@ -148,6 +182,12 @@ PREPARE migration FROM @migration_sql; EXECUTE migration; DEALLOCATE PREPARE mig
 SET @migration_sql = IF(EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='TRADE_ORDERS' AND column_name='exchangeRateAt'), 'SELECT 1', 'ALTER TABLE TRADE_ORDERS ADD COLUMN exchangeRateAt DATETIME(6)');
 PREPARE migration FROM @migration_sql; EXECUTE migration; DEALLOCATE PREPARE migration;
 SET @migration_sql = IF(EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='TRADE_ORDERS' AND column_name='quoteId'), 'SELECT 1', 'ALTER TABLE TRADE_ORDERS ADD COLUMN quoteId VARCHAR(255)');
+PREPARE migration FROM @migration_sql; EXECUTE migration; DEALLOCATE PREPARE migration;
+SET @migration_sql = IF(EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='TRADE_ORDERS' AND column_name='provider'), 'SELECT 1', 'ALTER TABLE TRADE_ORDERS ADD COLUMN provider VARCHAR(32) NOT NULL DEFAULT ''twelve-data''' );
+PREPARE migration FROM @migration_sql; EXECUTE migration; DEALLOCATE PREPARE migration;
+SET @migration_sql = IF(EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='INVESTMENT_WALLETS' AND column_name='positionsInitialized'), 'SELECT 1', 'ALTER TABLE INVESTMENT_WALLETS ADD COLUMN positionsInitialized BOOLEAN NOT NULL DEFAULT FALSE');
+PREPARE migration FROM @migration_sql; EXECUTE migration; DEALLOCATE PREPARE migration;
+SET @migration_sql = IF(EXISTS(SELECT 1 FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='TRADE_ORDERS' AND index_name='idx_trade_owner_time'), 'SELECT 1', 'CREATE INDEX idx_trade_owner_time ON TRADE_ORDERS(userId,createdAt,id)');
 PREPARE migration FROM @migration_sql; EXECUTE migration; DEALLOCATE PREPARE migration;
 ALTER TABLE TRADE_ORDERS MODIFY COLUMN price DECIMAL(19,6);
 UPDATE ACCOUNTS SET status='FREEZE' WHERE status='FROZEN';

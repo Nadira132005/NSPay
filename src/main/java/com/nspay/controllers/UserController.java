@@ -69,7 +69,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @io.swagger.v3.oas.annotations.Operation(summary="Delete a user", description="Administrator only.")
+    @io.swagger.v3.oas.annotations.Operation(summary="Retired user deletion", description="Returns 405. Users are retained; administrators may change account limits and restrictions.")
     public ResponseEntity<Void> deleteUser(@PathVariable long id, HttpServletRequest request) {
         assertAdmin(request);
         userService.deleteUser(id);

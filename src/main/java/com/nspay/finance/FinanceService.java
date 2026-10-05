@@ -30,14 +30,17 @@ public class FinanceService {
     private final AuditService audit;
     private final TransferService transfers;
     private final DocumentScanService scanner;
+    private final OnboardingService onboarding;
+    @org.springframework.beans.factory.annotation.Autowired private DailyPaymentUsage usage;
 
     public FinanceService(UserRepository users, AccountRepository accounts, TransactionRepository transactions,
         SavingsPocketRepository pockets, ScheduledTransferRepository schedules, TradeOrderRepository trades,
         CreditApplicationRepository credits, CreditDocumentRepository documents, CustomerProfileRepository profiles,
-        AuditService audit, TransferService transfers, DocumentScanService scanner) {
+        AuditService audit, TransferService transfers, DocumentScanService scanner,OnboardingService onboarding) {
         this.users=users; this.accounts=accounts; this.transactions=transactions; this.pockets=pockets;
         this.schedules=schedules; this.trades=trades; this.credits=credits; this.documents=documents;
         this.profiles=profiles; this.audit=audit; this.transfers=transfers; this.scanner=scanner;
+        this.onboarding=onboarding;
     }
 
     public UserModel user(long id) {
@@ -55,12 +58,15 @@ public class FinanceService {
     public Map<String,Object> overview(long id) {
         Map<String,Object> result=new LinkedHashMap<>();
         AccountModel account=account(id, false);
+        DailyPaymentUsage.Usage daily=usage.current(account);account.setDailyTx(daily.getDailyTx());account.setDailyTxSum(daily.getDailyTxSum());result.put("dailyUsage",daily);
         result.put("user",user(id)); result.put("account",account); result.put("currency","EUR");
         result.put("pockets",pockets.findByUserIdOrderByCreatedAtDesc(id));
         result.put("scheduled",schedules.findByUserIdOrderByCreatedAtDesc(id));
-        result.put("trades",trades.findByUserIdOrderByCreatedAtDesc(id));
+        result.put("trades",trades.findByUserId(id,org.springframework.data.domain.PageRequest.of(0,20,org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC,"id"))).getContent());
         result.put("credits",credits.findByUserIdOrderByCreatedAtDesc(id));
-        result.put("profile",profiles.findByUserId(id).orElse(null));
+        CustomerProfile profile=profiles.findByUserId(id).orElse(null);
+        result.put("profile",profile);result.put("onboardingAvailable",onboarding.available(profile));
+        result.put("creditEligible",account.getStatus()==AccountStatus.ACTIVE&&onboarding.verified(profile));
         result.put("documents",documents.findByUserIdOrderByCreatedAtDesc(id));
         result.put("transactions",transactions.findAllByCardNumber(account.getCardNumber()).stream()
             .sorted(Comparator.comparing(TransactionModel::getTimestamp, Comparator.nullsLast(Comparator.reverseOrder())))
@@ -142,26 +148,49 @@ public class FinanceService {
     }
     @Transactional
     public CustomerProfile saveProfile(long id,FinanceRequests.Profile request) {
-        account(id,true);
-        if (request.getDateOfBirth().isAfter(LocalDate.now().minusYears(18))) throw error(HttpStatus.BAD_REQUEST,"Onboarding requires age 18 or above");
-        CustomerProfile profile=profiles.findByUserId(id).orElseGet(CustomerProfile::new); profile.setUserId(id);
-        profile.setEmail(request.getEmail()); profile.setPhone(request.getPhone()); profile.setCountry(request.getCountry());
-        profile.setDateOfBirth(request.getDateOfBirth()); profile.setOccupation(request.getOccupation()); profile.setOnboardingStatus("PROFILE_COMPLETE");
-        audit.record(user(id).getName(),"ONBOARDING_PROFILE_SAVED"); return profiles.save(profile);
+        return onboarding.saveDetails(id,request);
     }
     @Transactional
     public CreditApplication createCredit(long id,FinanceRequests.Credit request) {
-        account(id,true);
+        onboarding.requireCreditEligibility(id);
         CreditApplication credit=new CreditApplication(); credit.setUserId(id); credit.setAmount(request.getAmount());
         credit.setMonthlyIncome(request.getMonthlyIncome()); credit.setTermMonths(request.getTermMonths()); credit.setPurpose(request.getPurpose().trim());
         audit.record(user(id).getName(),"CREDIT_DRAFT_CREATED"); return credits.save(credit);
     }
+    public Map<String,Object> creditQueue(long actor,int page,int size,String search,String status,String sort,String direction){
+        if(user(actor).getRole()!=com.nspay.enums.UserRole.Admin)throw error(HttpStatus.FORBIDDEN,"Administrator access required");
+        if(page<0||size<1||size>100||!Set.of("All","DRAFT","UNDER_REVIEW","APPROVED","DECLINED").contains(status)||!Set.of("createdAt","amount","monthlyIncome","termMonths","purpose").contains(sort)||!Set.of("asc","desc").contains(direction))throw error(HttpStatus.BAD_REQUEST,"Invalid credit filter, pagination or sort");
+        org.springframework.data.jpa.domain.Specification<CreditApplication> filter=(root,query,cb)->{
+            List<javax.persistence.criteria.Predicate> terms=new ArrayList<>();terms.add(cb.notEqual(root.get("userId"),actor));
+            if(!"All".equals(status))terms.add(cb.equal(root.get("status"),status));
+            if(search!=null&&!search.isBlank()){
+                String text="%"+search.trim().toLowerCase(Locale.ROOT).replace("\\","\\\\").replace("%","\\%").replace("_","\\_")+"%";
+                javax.persistence.criteria.Subquery<Long> owners=query.subquery(Long.class);javax.persistence.criteria.Root<UserModel> u=owners.from(UserModel.class);
+                owners.select(u.get("id")).where(cb.equal(u.get("id"),root.get("userId")),cb.like(cb.lower(u.get("name")),text,'\\'));
+                terms.add(cb.or(cb.like(cb.lower(root.get("purpose")),text,'\\'),cb.exists(owners)));
+            }
+            return cb.and(terms.toArray(new javax.persistence.criteria.Predicate[0]));
+        };
+        org.springframework.data.domain.Page<CreditApplication> result=credits.findAll(filter,org.springframework.data.domain.PageRequest.of(page,size,org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.fromString(direction),sort).and(org.springframework.data.domain.Sort.by("id"))));
+        List<Map<String,Object>> items=new ArrayList<>();for(CreditApplication credit:result.getContent()){Map<String,Object> row=new LinkedHashMap<>();row.put("application",credit);row.put("username",user(credit.getUserId()).getName());items.add(row);}
+        Map<String,Object> view=new LinkedHashMap<>();view.put("items",items);view.put("total",result.getTotalElements());view.put("page",page);view.put("size",size);return view;
+    }
+    @Transactional
+    public CreditApplication updateCredit(long id,long applicationId,FinanceRequests.Credit request) {
+        onboarding.requireCreditEligibility(id);
+        CreditApplication credit=credits.lockById(applicationId).filter(c -> c.getUserId()==id)
+            .orElseThrow(() -> error(HttpStatus.NOT_FOUND,"Credit application was not found"));
+        if (!"DRAFT".equals(credit.getStatus())) throw error(HttpStatus.CONFLICT,"Only drafts can be edited");
+        credit.setAmount(request.getAmount()); credit.setMonthlyIncome(request.getMonthlyIncome());
+        credit.setTermMonths(request.getTermMonths()); credit.setPurpose(request.getPurpose().trim());
+        audit.record(user(id).getName(),"CREDIT_DRAFT_UPDATED: "+applicationId); return credits.save(credit);
+    }
     @Transactional
     public CreditApplication submitCredit(long id,long applicationId) {
+        onboarding.requireCreditEligibility(id);
         CreditApplication credit=credits.lockById(applicationId).filter(c -> c.getUserId()==id)
             .orElseThrow(() -> error(HttpStatus.NOT_FOUND,"Credit application was not found"));
         if (!"DRAFT".equals(credit.getStatus())) throw error(HttpStatus.CONFLICT,"Application has already been submitted");
-        if (!profiles.findByUserId(id).isPresent()) throw error(HttpStatus.BAD_REQUEST,"Complete your profile before submitting");
         List<CreditDocument> docs=documents.findByApplicationIdAndUserId(applicationId,id);
         if (docs.stream().noneMatch(d -> "IDENTITY".equals(d.getKind())) || docs.stream().noneMatch(d -> "INCOME".equals(d.getKind())))
             throw error(HttpStatus.BAD_REQUEST,"Upload identity and income documents before submitting");
@@ -171,6 +200,7 @@ public class FinanceService {
     public CreditApplication reviewCredit(long reviewer,long applicationId,FinanceRequests.Review review) {
         if (user(reviewer).getRole()!=com.nspay.enums.UserRole.Admin) throw error(HttpStatus.FORBIDDEN,"Only administrators can review credit");
         CreditApplication credit=credits.lockById(applicationId).orElseThrow(() -> error(HttpStatus.NOT_FOUND,"Application was not found"));
+        if(credit.getUserId()==reviewer)throw error(HttpStatus.FORBIDDEN,"Administrators cannot review their own credit applications");
         if (!"UNDER_REVIEW".equals(credit.getStatus())) throw error(HttpStatus.CONFLICT,"Application is not awaiting review");
         if ("REVIEWED".equals(review.getDecision())) throw error(HttpStatus.BAD_REQUEST,"Choose approval or decline");
         credit.setStatus(review.getDecision()); credit.setReviewNote(review.getNote());
@@ -179,12 +209,13 @@ public class FinanceService {
     @Transactional
     public CreditDocument upload(long id,Long applicationId,String kind,MultipartFile file) throws IOException {
         if (!Arrays.asList("IDENTITY","INCOME").contains(kind)) throw error(HttpStatus.BAD_REQUEST,"Choose identity or income document");
-        account(id,true);
+        CustomerProfile onboardingProfile=null;
         if (applicationId!=null) {
+            onboarding.requireCreditEligibility(id);
             CreditApplication credit=credits.lockById(applicationId).filter(c -> c.getUserId()==id)
                 .orElseThrow(() -> error(HttpStatus.NOT_FOUND,"Application was not found"));
             if (!"DRAFT".equals(credit.getStatus())) throw error(HttpStatus.CONFLICT,"Only drafts accept new documents");
-        }
+        } else onboardingProfile=onboarding.requireIdentityUpload(id,kind);
         if (file.isEmpty() || file.getSize()>5*1024*1024) throw error(HttpStatus.BAD_REQUEST,"Choose a PDF, PNG, or JPEG up to 5 MB");
         byte[] bytes=file.getBytes(); String type=detectType(bytes);
         if (type==null) throw error(HttpStatus.BAD_REQUEST,"File content must be PDF, PNG, or JPEG");
@@ -194,7 +225,9 @@ public class FinanceService {
         document.setFilename(filename.substring(0,Math.min(filename.length(),150))); document.setContent(bytes); document.setContentType(type);
         try { document.setSha256(Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-256").digest(bytes))); }
         catch (java.security.NoSuchAlgorithmException impossible) { throw new IllegalStateException(impossible); }
-        scanner.scan(document); audit.record(user(id).getName(),"DOCUMENT_UPLOADED: "+kind); return documents.save(document);
+        scanner.scan(document);audit.record(user(id).getName(),"DOCUMENT_UPLOADED: "+kind);documents.save(document);
+        if(onboardingProfile!=null)onboarding.identitySubmitted(onboardingProfile);
+        return document;
     }
     private String detectType(byte[] b) {
         if (b.length>=5 && b[0]=='%' && b[1]=='P' && b[2]=='D' && b[3]=='F' && b[4]=='-') return "application/pdf";

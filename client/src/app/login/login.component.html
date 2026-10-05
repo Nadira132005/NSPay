@@ -1,0 +1,26 @@
+<main class="login-page">
+<section class="welcome-panel">
+<a class="login-brand" href="/">NSPay<span>.</span>
+</a>
+<div class="welcome-copy">
+<h1>Account access</h1>
+<p>Accounts, payments and investments.</p>
+</div>
+</section>
+<section class="form-panel">
+<form #loginForm="ngForm" (ngSubmit)="onSubmit()" (keydown.enter)="submitFromKeyboard($event, loginForm)">
+<h2>Sign in</h2>
+<p class="muted">Enter your account credentials.</p>
+<mat-form-field appearance="outline">
+<mat-label>Username</mat-label>
+<input matInput required autocomplete="username" name="username" [(ngModel)]="user.name">
+</mat-form-field>
+<mat-form-field appearance="outline">
+<mat-label>Password</mat-label>
+<input matInput required autocomplete="current-password" name="password" [(ngModel)]="user.password" type="password">
+</mat-form-field>
+<button mat-flat-button color="primary" type="submit" [disabled]="loginForm.invalid || busy">{{ busy ? 'Signing in…' : 'Sign in →' }}</button>
+<p class="error-banner" role="alert" *ngIf="statusMessage">{{ statusMessage }}</p>
+</form>
+</section>
+</main>

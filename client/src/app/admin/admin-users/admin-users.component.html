@@ -1,0 +1,78 @@
+<div class="dashboard">
+    <h1>User management</h1>
+    <p class="subtitle">Each user needs a separate account and IBAN. The temporary password is the username.</p>
+
+    <section class="panel">
+        <form #adminForm="ngForm" (ngSubmit)="createUser()" class="user-form">
+            <label>
+                <span>Username</span>
+                <input name="name" required [(ngModel)]="user.name" type="text" placeholder="Username">
+            </label>
+
+            <label>
+                <span>First name</span>
+                <input name="firstName" required [(ngModel)]="user.firstName" type="text" placeholder="First name">
+            </label>
+
+            <label>
+                <span>Last name</span>
+                <input name="lastName" required [(ngModel)]="user.lastName" type="text" placeholder="Last name">
+            </label>
+
+            <label>
+                <span>Role</span>
+                <select name="role" required [(ngModel)]="user.role">
+                    <option [ngValue]="undefined" disabled>Select role</option>
+                    <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+                </select>
+            </label>
+
+            <label>
+                <span>Account</span>
+                <select name="accountId" required [(ngModel)]="user.accountId">
+                    <option [ngValue]="null" disabled>Select account</option>
+                    <option *ngFor="let account of accountsData" [ngValue]="account.id">
+                        {{ account.cardHolderName }} - {{ account.iban }}
+                    </option>
+                </select>
+            </label>
+
+            <button type="submit" [disabled]="adminForm.invalid">Create user</button>
+        </form>
+
+        <p class="status" *ngIf="statusMessage">{{ statusMessage }}</p>
+    </section>
+
+    <table mat-table [dataSource]="usersData" class="mat-elevation-z8">
+        <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef> id </th>
+            <td mat-cell *matCellDef="let row"> {{ row.id }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef> username </th>
+            <td mat-cell *matCellDef="let row"> {{ row.name }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="fullName">
+            <th mat-header-cell *matHeaderCellDef> full name </th>
+            <td mat-cell *matCellDef="let row"> {{ row.firstName }} {{ row.lastName }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef> role </th>
+            <td mat-cell *matCellDef="let row"> {{ row.role }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="account">
+            <th mat-header-cell *matHeaderCellDef> account </th>
+            <td mat-cell *matCellDef="let row">
+                {{ getAccountLabel(row.accountId) }}
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="['id', 'name', 'fullName', 'role', 'account']"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['id', 'name', 'fullName', 'role', 'account'];"></tr>
+    </table>
+
+</div>

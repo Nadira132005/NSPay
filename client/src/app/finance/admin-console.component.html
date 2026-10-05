@@ -1,0 +1,133 @@
+<div class="section-title">
+<p class="muted">User accounts and access restrictions</p>
+<div class="button-row">
+<a mat-button routerLink="/dashboard/admin/accounts">Account limits</a>
+<a mat-button routerLink="/dashboard/admin/users">Manage users</a>
+<a mat-stroked-button routerLink="/dashboard/security">Payment review</a>
+</div>
+</div>
+<div class="workspace-metrics status-metrics">
+<button class="card metric-filter" *ngFor="let s of statuses" (click)="filter=s" [class.selected]="filter===s">
+<app-status-badge [value]="s"></app-status-badge>
+<strong>{{ count(s) }}</strong>
+</button>
+</div>
+<section class="card">
+<div class="review-filters">
+<mat-form-field appearance="outline">
+<mat-label>Search name, username or IBAN</mat-label>
+<input matInput [(ngModel)]="search">
+</mat-form-field>
+<mat-form-field appearance="outline">
+<mat-label>Status</mat-label>
+<mat-select [(ngModel)]="filter">
+<mat-option value="All">All statuses</mat-option>
+<mat-option *ngFor="let s of statuses" [value]="s">{{ statusLabel(s) }}</mat-option>
+</mat-select>
+</mat-form-field>
+<mat-form-field appearance="outline"><mat-label>Verification</mat-label><mat-select [(ngModel)]="verificationFilter"><mat-option value="All">All verification states</mat-option><mat-option *ngFor="let s of ['NOT_STARTED','PROFILE_COMPLETE','UNDER_REVIEW','VERIFIED','DECLINED']" [value]="s">{{ verificationLabel(s) }}</mat-option></mat-select></mat-form-field>
+</div>
+<p class="error-banner" role="alert" *ngIf="error">{{ error }}</p>
+<div class="data-table">
+<table>
+<thead>
+<tr>
+<th>User</th>
+<th>Account</th>
+<th>Balance</th>
+<th>Status</th>
+<th>Verification</th>
+<th>Suspensions</th>
+<th>
+<span class="muted">Actions</span>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr *ngFor="let u of filtered">
+<td>
+<strong>{{ u.name }}</strong>
+<small>{{ u.username }} · {{ u.role }}</small>
+</td>
+<td>
+<span class="masked-card">{{ u.card || 'No account' }}</span>
+<small class="mono">{{ u.iban }}</small>
+</td>
+<td>{{ u.balance | currency:'EUR' }}</td>
+<td>
+<app-status-badge [value]="u.status"></app-status-badge>
+<small *ngIf="u.restriction.suspendedUntil">Until {{ u.restriction.suspendedUntil | date:'mediumDate' }}</small>
+</td>
+<td><app-status-badge [value]="u.onboardingStatus"></app-status-badge></td>
+<td>{{ u.restriction.suspensionCount }}</td>
+<td>
+<ng-container *ngIf="u.username!==auth.getCurrentUserName()">
+<button mat-stroked-button (click)="edit(u)" [disabled]="!u.status">Manage</button>
+<button mat-button (click)="inspectVerification(u)">Review identity</button>
+</ng-container>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="empty-state" *ngIf="!filtered.length">No matching users.</p>
+</section>
+<ng-template #statusDialog>
+<h2 mat-dialog-title>{{ selected.username }} · Account status</h2>
+<mat-dialog-content>
+<p class="small muted" *ngIf="selected.restriction.reason">Last reason: {{ selected.restriction.reason }}</p>
+<form #statusForm="ngForm" class="form-grid">
+<mat-form-field appearance="outline">
+<mat-label>Status</mat-label>
+<mat-select name="status" [(ngModel)]="status" required>
+<mat-option *ngFor="let s of statuses" [value]="s">{{ statusLabel(s) }}</mat-option>
+</mat-select>
+</mat-form-field>
+<mat-form-field appearance="outline" *ngIf="status==='SUSPENDED'">
+<mat-label>Suspension length (days)</mat-label>
+<input matInput type="number" name="days" [(ngModel)]="days" min="30" max="90" step="1" required>
+</mat-form-field>
+<p class="notice" *ngIf="status==='SUSPENDED' && selected.restriction.suspensionCount >= 1">This user has a previous suspension. A second suspension sets their status to Blocked.</p>
+<mat-form-field appearance="outline">
+<mat-label>Reason</mat-label>
+<textarea matInput name="reason" [(ngModel)]="reason" minlength="5" maxlength="250" required>
+</textarea>
+</mat-form-field>
+<mat-form-field appearance="outline"><mat-label>Public note (all customers)</mat-label><textarea matInput name="publicNote" [(ngModel)]="publicNote" maxlength="250"></textarea></mat-form-field>
+<mat-form-field appearance="outline"><mat-label>Private note (affected customer)</mat-label><textarea matInput name="privateNote" [(ngModel)]="privateNote" maxlength="250"></textarea></mat-form-field>
+<p class="small muted">Freeze, Suspended and Blocked prevent balance operations. Changes are recorded in the status history.</p>
+<p class="error-banner" role="alert" *ngIf="error">{{ error }}</p>
+<div class="button-row">
+<button type="button" mat-button mat-dialog-close [disabled]="busy">Cancel</button>
+<button type="button" mat-flat-button color="primary" (click)="save()" [disabled]="busy || statusForm.invalid">Save status</button>
+</div>
+</form>
+</mat-dialog-content>
+</ng-template>
+<ng-template #verificationDialog>
+<h2 mat-dialog-title>{{ verificationUser.username }} · Identity verification</h2>
+<mat-dialog-content>
+<mat-progress-bar *ngIf="verificationLoading" mode="indeterminate"></mat-progress-bar>
+<ng-container *ngIf="verificationRecord as record">
+  <ng-container *ngIf="record.profile as p; else missingProfile">
+    <app-status-badge [value]="p.onboardingStatus"></app-status-badge>
+    <div class="summary-line"><span>Email</span><strong>{{ p.email }}</strong></div>
+    <div class="summary-line"><span>Phone</span><strong>{{ p.phone }}</strong></div>
+    <div class="summary-line"><span>Date of birth</span><strong>{{ p.dateOfBirth | date:'mediumDate' }}</strong></div>
+    <div class="summary-line"><span>Country</span><strong>{{ p.country }}</strong></div>
+    <div class="summary-line"><span>Occupation</span><strong>{{ p.occupation }}</strong></div>
+    <div class="list-row" *ngFor="let doc of record.documents"><div><strong>{{ doc.filename }}</strong><small>Identity document</small></div><a mat-button [href]="'/api/finance/documents/'+doc.id+'/download'">Download</a></div>
+    <p class="small muted" *ngIf="!record.documents.length">An identity document must be submitted before verification.</p>
+    <p class="small muted" *ngIf="p.reviewNote">Previous decision: {{ p.reviewNote }} · {{ p.reviewedAt | date:'medium' }}</p>
+    <mat-form-field appearance="outline"><mat-label>Verification decision note</mat-label><textarea matInput [(ngModel)]="verificationNote" minlength="5" maxlength="250" required></textarea></mat-form-field>
+    <div class="button-row">
+      <button mat-flat-button color="primary" (click)="reviewVerification('VERIFIED')" [disabled]="busy || !canReviewVerification || p.onboardingStatus==='VERIFIED'">Approve verification</button>
+      <button mat-stroked-button (click)="reviewVerification('DECLINED')" [disabled]="busy || !canReviewVerification || p.onboardingStatus==='DECLINED'">Deny verification</button>
+    </div>
+  </ng-container>
+  <ng-template #missingProfile><p>Personal details have not been submitted.</p></ng-template>
+</ng-container>
+<p class="error-banner" role="alert" *ngIf="error">{{ error }}</p>
+</mat-dialog-content>
+<mat-dialog-actions align="end"><button mat-button mat-dialog-close [disabled]="busy">Close</button></mat-dialog-actions>
+</ng-template>

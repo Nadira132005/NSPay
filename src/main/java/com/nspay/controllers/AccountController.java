@@ -29,6 +29,7 @@ public class AccountController {
 
     @Autowired
     AccountService accountService;
+    @Autowired private com.nspay.finance.AccountLimitsService limits;
 
     @GetMapping
     @io.swagger.v3.oas.annotations.Operation(summary="List accounts", description="Administrator or analyst only.")
@@ -63,16 +64,20 @@ public class AccountController {
     }
 
     @PutMapping("/{id}")
-    @io.swagger.v3.oas.annotations.Operation(summary="Update account details and limits", description="Administrator only. This endpoint cannot change status; use the dedicated security status endpoint.")
+    @io.swagger.v3.oas.annotations.Operation(summary="Update advisory account limits (legacy)", description="Administrator only. Only the daily count and EUR sum limits are applied; balance, identity, usage and status cannot be changed. Prefer PUT /api/account-limits/{accountId} for atomic score refresh and audit.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode="200",description="Successful response",content=@io.swagger.v3.oas.annotations.media.Content(mediaType="application/json",schema=@io.swagger.v3.oas.annotations.media.Schema(implementation=com.nspay.entities.AccountModel.class)))
     public ResponseEntity<?> updateAccount(@PathVariable long id,
-                                           @Valid @RequestBody AccountDTO accountDTO) {
+                                           @Valid @RequestBody AccountDTO accountDTO, javax.servlet.http.HttpServletRequest request) {
         logger.info("PUT /accounts/{} called", id);
-        return accountService.updateAccount(id, accountDTO);
+        Object actor=request.getAttribute("authenticatedUserId");
+        if(!(actor instanceof Number))throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.UNAUTHORIZED);
+        com.nspay.finance.AccountLimitsService.Limits payload=new com.nspay.finance.AccountLimitsService.Limits();payload.setDailyTxLimit(accountDTO.getDailyTxLimit());payload.setDailyTxSumLimit(java.math.BigDecimal.valueOf(accountDTO.getDailyTxSumLimit()));
+        if(payload.getDailyTxLimit()<1||!Double.isFinite(accountDTO.getDailyTxSumLimit())||payload.getDailyTxSumLimit().signum()<=0)throw new com.nspay.exceptions.ValidationException("Enter positive daily limits");
+        return ResponseEntity.ok(limits.update(((Number)actor).longValue(),id,payload));
     }
 
     @DeleteMapping("/{id}")
-    @io.swagger.v3.oas.annotations.Operation(summary="Delete an account", description="Administrator only.")
+    @io.swagger.v3.oas.annotations.Operation(summary="Retired account deletion", description="Returns 405. Accounts are retained; administrators may change limits or set restrictions through Security.")
     public ResponseEntity<?> deleteAccount(@PathVariable long id) {
         logger.info("DELETE /accounts/{} called", id);
         return accountService.deleteAccount(id);

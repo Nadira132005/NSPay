@@ -28,5 +28,5 @@ target/
 .env.local
 openapi.json
 logs/
-angular-front-end/dist/
+client/dist/
 __pycache__/

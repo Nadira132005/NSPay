@@ -12,7 +12,7 @@ import javax.transaction.Transactional;
 
 @Transactional
 @Repository
-public interface AccountRepository extends CrudRepository<AccountModel, Long> {
+public interface AccountRepository extends org.springframework.data.jpa.repository.JpaRepository<AccountModel, Long>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<AccountModel> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     AccountModel findByCardNumber(String cardNumber);

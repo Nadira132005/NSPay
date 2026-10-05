@@ -65,6 +65,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         request.setAttribute("authenticatedRole", claims.get("role"));
         request.setAttribute("authenticatedName", claims.getSubject());
 
+        // Browser cookies are renewed before the response is committed. Bearer clients receive the same token in a header.
+        // A password-change response issues its own updated token; never overwrite it with old claims.
+        if (!"/api/users/me/password".equals(request.getRequestURI())) {
+            String renewed=jwtService.renewToken(claims);
+            response.setHeader("X-Session-Token",renewed);
+            response.addHeader(HttpHeaders.SET_COOKIE,org.springframework.http.ResponseCookie.from(AUTH_TOKEN_COOKIE,renewed)
+                .path("/").sameSite("Lax").secure(request.isSecure()).maxAge(jwtService.getExpirationSeconds()).build().toString());
+        }
         filterChain.doFilter(request, response);
     }
 

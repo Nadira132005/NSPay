@@ -137,10 +137,7 @@ public class UserService {
 
     @Transactional
     public void deleteUser(long id) {
-        if (!userRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with id " + id + " is not found");
-        }
-        userRepository.deleteById(id);
+        throw new ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED,"User deletion is unavailable");
     }
 
     private void applyAccount(Long accountId) {

@@ -11,4 +11,8 @@ public class StatusChange extends OwnedRecord {
     private String reason;
     private Instant suspendedUntil;
     private int suspensionCount;
+    @Column(length=250) private String publicNote;
+    @Column(length=250) private String privateNote;
+    private Integer misalignmentScore;
+    private Long transactionId;
 }

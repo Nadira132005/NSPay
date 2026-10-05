@@ -13,6 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -85,15 +86,12 @@ class AccountControllerIntegrationTest {
     }
 
     @Test
-    void shouldUpdateAccount() throws Exception {
+    void legacyUpdatesRequireAnAuthenticatedAdministrator() throws Exception {
         AccountModel account = accountRepository.findByCardNumber("1234000000056789");
-
-        mockMvc.perform(put("/accounts/" + account.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"cardNumber\":\"1234000000056789\",\"cardHolderName\":\"John Black Updated\",\"amount\":30.0,\"dailyTxLimit\":1000000,\"dailyTxSumLimit\":1000000000.0,\"dailyTx\":0,\"dailyTxSum\":0.0}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cardHolderName", is("John Black Updated")))
-                .andExpect(jsonPath("$.amount", is(30.0)));
+        mockMvc.perform(put("/accounts/" + account.getId()).contentType(MediaType.APPLICATION_JSON)
+            .content("{\"cardNumber\":\"1234000000056789\",\"cardHolderName\":\"John Black Updated\",\"amount\":30.0,\"dailyTxLimit\":1000000,\"dailyTxSumLimit\":1000000000.0}"))
+            .andExpect(status().isUnauthorized());
+        assertEquals(15.0,accountRepository.findById(account.getId()).orElseThrow().getAmount());
     }
 
     @Test
@@ -101,10 +99,10 @@ class AccountControllerIntegrationTest {
         AccountModel account = accountRepository.findByCardNumber("1234000000056789");
 
         mockMvc.perform(delete("/accounts/" + account.getId()))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isMethodNotAllowed());
 
         mockMvc.perform(get("/accounts/" + account.getId()))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
     }
 
     @Test

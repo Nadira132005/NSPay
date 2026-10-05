@@ -11,7 +11,7 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name="TRANSACTIONS")
+@Table(name="TRANSACTIONS",indexes=@Index(name="idx_transaction_history",columnList="cardNumber,timestamp"))
 public class TransactionModel {
 
     @Id

@@ -39,6 +39,7 @@ class AccountControllerTest {
 
     @MockBean
     private AccountService accountService;
+    @MockBean private com.nspay.finance.AccountLimitsService limits;
 
     @Test
     void shouldReturnAllAccounts() throws Exception {
@@ -99,24 +100,20 @@ class AccountControllerTest {
 
     @Test
     void shouldUpdateAccount() throws Exception {
-        Account account = new Account(1L, "1234000000056789", "John Black Updated", 30.00, 1000000, 1000000000.00, 0, 0.00);
-        ResponseEntity<?> response = new ResponseEntity<>(account, new HttpHeaders(), HttpStatus.OK);
-        doReturn(response).when(accountService).updateAccount(org.mockito.ArgumentMatchers.eq(1L), org.mockito.ArgumentMatchers.any(AccountDTO.class));
-
-        mockMvc.perform(put("/accounts/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"cardNumber\":\"1234000000056789\",\"cardHolderName\":\"John Black Updated\",\"amount\":30.0,\"dailyTxLimit\":1000000,\"dailyTxSumLimit\":1000000000.0,\"dailyTx\":0,\"dailyTxSum\":0.0}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cardHolderName", is("John Black Updated")));
+        doReturn(java.util.Map.of("id",1,"usage",java.util.Map.of("dailyTxLimit",1000000))).when(limits).update(org.mockito.ArgumentMatchers.eq(42L),org.mockito.ArgumentMatchers.eq(1L),org.mockito.ArgumentMatchers.any(com.nspay.finance.AccountLimitsService.Limits.class));
+        mockMvc.perform(put("/accounts/1").requestAttr("authenticatedUserId",42L)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"cardNumber\":\"1234000000056789\",\"cardHolderName\":\"John Black Updated\",\"amount\":30.0,\"dailyTxLimit\":1000000,\"dailyTxSumLimit\":1000000000.0,\"dailyTx\":0,\"dailyTxSum\":0.0}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.usage.dailyTxLimit",is(1000000)));
     }
 
     @Test
     void shouldDeleteAccount() throws Exception {
         ResponseEntity<?> response = new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        doReturn(response).when(accountService).deleteAccount(1L);
+        org.mockito.Mockito.doThrow(new org.springframework.web.server.ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED,"Account deletion is unavailable")).when(accountService).deleteAccount(1L);
 
         mockMvc.perform(delete("/accounts/1"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isMethodNotAllowed());
     }
 
     @Test

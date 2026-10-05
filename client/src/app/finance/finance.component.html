@@ -1,0 +1,501 @@
+<mat-progress-bar *ngIf="loading || busy" mode="indeterminate" aria-label="Loading your finances">
+</mat-progress-bar>
+<div class="error-banner" role="alert" *ngIf="error">{{ error }} <button mat-button (click)="load()" [disabled]="busy">Retry</button>
+</div>
+<div class="empty-state" *ngIf="!loading && !data">
+<h2>Your finances are unavailable</h2>
+<p>Try again or contact support if the problem continues.</p>
+</div>
+<ng-container *ngIf="data as d">
+  <div class="page-heading">
+<h1>{{ section === 'accounts' ? 'Accounts' : section === 'admin' ? 'Administration' : section === 'overview' ? 'Overview' : section === 'savings' ? 'Savings' : section === 'payments' ? 'Payments' : section === 'trading' ? 'Investments' : section === 'credit' ? 'Credit applications' : section === 'onboarding' ? 'Onboarding' : 'Security' }}</h1>
+<div class="profile-states" *ngIf="section==='overview'"><app-status-badge [value]="d.account.status"></app-status-badge><app-status-badge [value]="d.profile?.onboardingStatus || 'NOT_STARTED'"></app-status-badge></div>
+</div>
+  <div class="notice" *ngIf="!active && !isAdmin"><app-status-badge [value]="d.account.status"></app-status-badge><span>Money movements are unavailable. Open Security to view account activity.</span></div>
+  <div class="notice onboarding-banner" *ngIf="section === 'overview' && !verified && d.onboardingAvailable">
+<div>
+<strong>{{ detailsSaved ? 'Finish identity verification' : 'Complete onboarding' }}</strong>
+<p>{{ detailsSaved ? 'Your details are saved. Submit your identity document for review.' : 'Submit your details and identity document to enable credit applications.' }}</p>
+</div>
+<a mat-stroked-button routerLink="/dashboard/onboarding" *ngIf="active">{{ detailsSaved ? 'Continue' : 'Get started' }}</a>
+</div>
+  <div class="notice" *ngIf="hasLegacyData">
+<div>
+<strong>Previous browser-only data found</strong>
+<p>Earlier savings and schedules stored in this browser can be exported for reference. They do not affect your account balance.</p>
+</div>
+<button mat-button (click)="exportLegacy()">Export old data</button>
+</div>
+
+  <app-account-limits *ngIf="section==='accounts'&&isAdmin"></app-account-limits>
+  <section class="notice daily-warning" role="status" *ngIf="!isAdmin&&(section==='overview'||section==='payments')&&d.dailyUsage&&d.dailyUsage.level!=='NORMAL'">
+    <span class="warning-icon" aria-hidden="true">!</span><div><strong>{{d.dailyUsage.level==='NEAR'?'You’re approaching a daily payment limit':d.dailyUsage.level==='REACHED'?'Daily payment limit reached':'Daily payment limit exceeded'}}</strong><p>{{d.dailyUsage.dailyTx}} / {{d.dailyUsage.dailyTxLimit}} payments · {{d.dailyUsage.dailyTxSum|currency:'EUR'}} / {{d.dailyUsage.dailyTxSumLimit|currency:'EUR'}} today. You can continue making payments.</p><small>Resets {{d.dailyUsage.resetsAt|date:'shortTime'}} (Bucharest time).</small></div>
+  </section>
+  <ng-container *ngIf="section === 'overview'">
+    <div class="overview-grid">
+      <section class="balance-card">
+<div class="card-top">
+<span>Available balance</span>
+<span class="currency-pill">EUR €</span>
+</div>
+<h2>{{ d.account.amount | currency:'EUR':'symbol':'1.2-2' }}</h2>
+<p>Your main account <app-status-badge [value]="d.account.status"></app-status-badge>
+</p>
+<div class="balance-actions">
+<a mat-flat-button routerLink="/dashboard/payments">↗ Send money</a>
+<a mat-stroked-button routerLink="/dashboard/savings">＋ Save money</a>
+</div>
+<div class="iban">
+<span>YOUR IBAN</span>
+<strong>{{ d.account.iban }}</strong>
+</div>
+<div class="balance-art" aria-hidden="true">
+</div>
+</section>
+      <section class="card wealth-card">
+<span class="eyebrow">BALANCES</span>
+<h2>Account and savings balances</h2>
+<div class="wealth-amount">{{ total | currency:'EUR' }}</div>
+<div class="wealth-line">
+<span>
+<i class="dot main-dot">
+</i> Account balance</span>
+<strong>{{ d.account.amount | currency:'EUR' }}</strong>
+</div>
+<div class="wealth-line">
+<span>
+<i class="dot savings-dot">
+</i> Savings pockets</span>
+<strong>{{ savings | currency:'EUR' }}</strong>
+</div>
+</section>
+    </div>
+    <div class="section-title">
+<h2>Accounts and services</h2>
+<span>
+</span>
+</div>
+    <div class="feature-grid">
+<a class="feature-card sage" routerLink="/dashboard/savings">
+<span class="feature-symbol">◎</span>
+<h3>Savings</h3>
+<p>Create pockets and move money between balances.</p>
+<span class="feature-link">Explore savings ↗</span>
+</a>
+<a class="feature-card lavender" routerLink="/dashboard/trading">
+<span class="feature-symbol">↗</span>
+<h3>Investments</h3>
+<p>Browse stocks, fund your portfolio and manage holdings.</p>
+<span class="feature-link">Open investments ↗</span>
+</a>
+<a class="feature-card peach" routerLink="/dashboard/credit">
+<span class="feature-symbol">✳</span>
+<h3>Credit</h3>
+<p>Apply for credit and track your application.</p>
+<span class="feature-link">Explore credit ↗</span>
+</a>
+</div>
+    <div class="two-columns">
+<section class="card">
+<div class="section-title">
+<h2>Recent activity</h2>
+<a routerLink="/dashboard/payments">See all →</a>
+</div>
+<ng-container *ngTemplateOutlet="activity; context: {rows: d.transactions.slice(0,5)}">
+</ng-container>
+</section>
+<section class="card">
+<span class="eyebrow">LAST 7 DAYS</span>
+<h2>Money out</h2>
+<p class="muted small">Completed outgoing transactions.</p>
+<div class="bar-chart" aria-label="Outgoing activity over the last seven days">
+<div class="bar-column" *ngFor="let day of [0,1,2,3,4,5,6]">
+<span class="bar-value">{{ spending(day) | currency:'EUR':'symbol':'1.0-0' }}</span>
+<div class="bar-track">
+<div class="bar-fill" [style.height.%]="spending(day) / maxSpending * 100">
+</div>
+</div>
+<span>{{ dayLabel(day) }}</span>
+</div>
+</div>
+</section>
+</div>
+  </ng-container>
+
+  <ng-container *ngIf="section === 'savings'">
+    <div class="two-columns">
+<section class="card">
+<span class="eyebrow">SAVINGS BALANCE</span>
+<h2>Savings pockets</h2>
+<div class="wealth-amount">{{ savings | currency:'EUR' }}</div>
+<p class="muted">Pockets keep your goals separate from your available spending balance. Move money back whenever you need it.</p>
+<p class="small">Savings pockets do not accrue interest.</p>
+</section>
+<form class="card form-grid" #pocketForm="ngForm" (ngSubmit)="createPocket()">
+<h2>Create a savings pocket</h2>
+<mat-form-field appearance="outline">
+<mat-label>What are you saving for?</mat-label>
+<input matInput name="name" [(ngModel)]="pocket.name" required maxlength="60" placeholder="A weekend away">
+</mat-form-field>
+<div class="two-fields">
+<mat-form-field appearance="outline">
+<mat-label>Goal (€)</mat-label>
+<input matInput type="number" name="target" [(ngModel)]="pocket.targetAmount" min="0.01" step="0.01" required>
+</mat-form-field>
+<mat-form-field appearance="outline">
+<mat-label>Start with (€)</mat-label>
+<input matInput type="number" name="initial" [(ngModel)]="pocket.initialAmount" min="0" step="0.01" required>
+</mat-form-field>
+</div>
+<button mat-flat-button color="primary" [disabled]="busy || !active || pocketForm.invalid">Create pocket</button>
+</form>
+</div>
+    <div class="section-title">
+<h2>Your pockets</h2>
+<span>{{ d.pockets.length }} goals in motion</span>
+</div>
+<div class="pocket-grid">
+<section class="card pocket-card" *ngFor="let p of d.pockets">
+<span class="feature-symbol">◎</span>
+<h3>{{ p.name }}</h3>
+<h2>{{ p.balance | currency:'EUR' }}</h2>
+<mat-progress-bar mode="determinate" [value]="progress(p)" [attr.aria-label]="p.name + ' progress'">
+</mat-progress-bar>
+<p class="small muted">{{ progress(p) | number:'1.0-0' }}% of {{ p.targetAmount | currency:'EUR' }}</p>
+<div class="button-row">
+<button mat-flat-button color="primary" (click)="openPocket(p,'deposit')" [disabled]="busy || !active">Add money</button>
+<button mat-stroked-button (click)="openPocket(p,'withdraw')" [disabled]="busy || !active || p.balance <= 0">Withdraw</button>
+</div>
+<button mat-button (click)="closePocket(p)" [disabled]="busy || !active">Close pocket</button>
+</section>
+</div>
+<div class="empty-state" *ngIf="!d.pockets.length">
+<span>◎</span>
+<h3>Your first goal starts here</h3>
+<p>Create a pocket above. Even a small amount is a start.</p>
+</div>
+  </ng-container>
+
+  <ng-container *ngIf="section === 'payments'">
+    <div class="two-columns">
+<form class="card form-grid" #paymentForm="ngForm" (ngSubmit)="paymentForm.valid && reviewPayment()">
+<h2>Send a transfer</h2>
+<p class="muted">Available: {{ d.account.amount | currency:'EUR' }}</p>
+<mat-form-field appearance="outline">
+<mat-label>Recipient IBAN</mat-label>
+<input matInput name="iban" [(ngModel)]="payment.recipientIban" required maxlength="34" placeholder="RO81NSPY0000000000000003">
+<mat-hint>Enter the recipient’s IBAN.</mat-hint>
+</mat-form-field>
+<mat-form-field appearance="outline">
+<mat-label>Amount (€)</mat-label>
+<input matInput type="number" name="amount" [(ngModel)]="payment.amount" min="0.01" step="0.01" required>
+</mat-form-field>
+<div class="transfer-actions">
+<button type="submit" mat-flat-button color="primary" [disabled]="busy || !active || paymentForm.invalid">Review transfer</button>
+<button type="button" mat-stroked-button (click)="openSchedulePicker()" [disabled]="busy || !active || paymentForm.invalid">
+<svg class="clock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+Schedule transfer</button>
+</div>
+</form>
+<section class="card">
+<span class="eyebrow">SCHEDULES</span>
+<h2>Scheduled transfers</h2>
+<div class="list-row" *ngFor="let s of d.scheduled">
+<div>
+<strong>{{ s.amount | currency:'EUR' }}</strong>
+<p class="small mono">{{ s.recipientIban }}</p>
+<p class="small muted">{{ s.scheduledAt | date:'medium' }}</p>
+<p class="small" *ngIf="s.failureReason">{{ s.failureReason }}</p>
+</div>
+<div class="row-end">
+<span class="status-chip">{{ s.status | titlecase }}</span>
+<button mat-button *ngIf="s.status === 'PENDING'" (click)="cancelSchedule(s.id)" [disabled]="busy">Cancel</button>
+</div>
+</div>
+<div class="empty-state" *ngIf="!d.scheduled.length">
+<h3>Nothing scheduled yet</h3>
+<p>Scheduled transfers appear here. Funds are checked on the execution date.</p>
+</div>
+</section>
+</div>
+<section class="card space-top">
+<h2>Your activity</h2>
+<ng-container *ngTemplateOutlet="activity; context: {rows: d.transactions}">
+</ng-container>
+</section>
+  </ng-container>
+
+  <app-investments *ngIf="section === 'trading'" [mainBalance]="d.account.amount" [active]="active" (changed)="load()">
+</app-investments>
+  <app-admin-console *ngIf="section === 'admin'">
+</app-admin-console>
+
+  <app-credit-review *ngIf="section === 'credit' && isAdmin"></app-credit-review>
+  <ng-container *ngIf="section === 'credit' && !isAdmin">
+    <div class="notice credit-access" role="status" *ngIf="!creditEligible">
+      <div><strong>Credit applications unavailable</strong><p>{{ creditBlockReason }}</p><p *ngIf="d.profile?.reviewNote">Review note: {{ d.profile?.reviewNote }}</p></div>
+      <a mat-stroked-button routerLink="/dashboard/onboarding" *ngIf="active && d.onboardingAvailable">Complete onboarding</a>
+    </div>
+    <div class="credit-workflow" #creditWorkflow [class.is-disabled]="!creditEligible" [attr.inert]="creditEligible ? null : ''" [attr.aria-disabled]="!creditEligible">
+    <fieldset class="credit-fields" [disabled]="!creditEligible">
+    <mat-stepper [linear]="false" #creditSteps>
+      <ng-template matStepperIcon="edit"><span aria-hidden="true">✎</span></ng-template>
+      <ng-template matStepperIcon="done"><span aria-hidden="true">✓</span></ng-template>
+      <mat-step label="Your plan">
+<form #creditForm="ngForm" class="card form-grid narrow-form" (ngSubmit)="creditForm.valid && saveCredit()">
+<div class="section-title"><h2>Application details</h2><button type="button" mat-button *ngIf="draft" (click)="startCredit()" [disabled]="busy || !creditEligible">New application</button></div>
+<mat-form-field appearance="outline">
+<mat-label>Purpose</mat-label>
+<input matInput name="purpose" [(ngModel)]="credit.purpose" required maxlength="250" placeholder="Home improvements">
+</mat-form-field>
+<div class="two-fields">
+<mat-form-field appearance="outline">
+<mat-label>Requested amount (€)</mat-label>
+<input matInput type="number" name="creditAmount" [(ngModel)]="credit.amount" min="100" max="100000" step="0.01" required>
+</mat-form-field>
+<mat-form-field appearance="outline">
+<mat-label>Term (months)</mat-label>
+<input matInput type="number" name="term" [(ngModel)]="credit.termMonths" min="3" max="60" step="1" required>
+</mat-form-field>
+</div>
+<mat-form-field appearance="outline">
+<mat-label>Monthly income (€)</mat-label>
+<input matInput type="number" name="income" [(ngModel)]="credit.monthlyIncome" min="1" step="0.01" required>
+</mat-form-field>
+<p class="muted small">Saving a draft does not submit it. Rates and repayment terms are provided after review.</p>
+<button mat-flat-button color="primary" [disabled]="busy || !creditEligible || creditForm.invalid || !creditChanged">{{ draft ? 'Save changes' : 'Save application draft' }}</button>
+<button type="button" mat-button matStepperNext [disabled]="busy || !creditEligible || !draft || creditChanged">Continue to documents →</button>
+</form>
+</mat-step>
+      <mat-step label="Documents">
+<section class="card form-grid">
+<h2>Supporting documents</h2>
+<mat-form-field appearance="outline">
+<mat-label>Application draft</mat-label>
+<mat-select [ngModel]="currentCreditId" (ngModelChange)="selectCredit($event)" [disabled]="busy || !creditEligible">
+<ng-container *ngFor="let c of d.credits">
+<mat-option *ngIf="c.status === 'DRAFT'" [value]="c.id">{{ c.purpose }} · {{ c.amount | currency:'EUR' }}</mat-option>
+</ng-container>
+</mat-select>
+</mat-form-field>
+<p class="muted">Accepted: PDF, PNG or JPEG, up to 5 MB each. Documents are stored for review.</p>
+<div class="two-fields">
+<label class="upload-card">
+<span>▧</span>
+<strong>Identity document</strong>
+<small>Passport or identity card</small>
+<input type="file" accept="application/pdf,image/png,image/jpeg" (change)="upload($event,'IDENTITY',true)" [disabled]="busy || !creditEligible || !draft" aria-label="Upload credit identity document">
+</label>
+<label class="upload-card">
+<span>▤</span>
+<strong>Income document</strong>
+<small>Payslip or income statement</small>
+<input type="file" accept="application/pdf,image/png,image/jpeg" (change)="upload($event,'INCOME',true)" [disabled]="busy || !creditEligible || !draft" aria-label="Upload income document">
+</label>
+</div>
+<ng-container *ngTemplateOutlet="documentList; context: {rows: currentDocuments}">
+</ng-container>
+<div class="button-row">
+<button mat-button matStepperPrevious>Back</button>
+<button mat-flat-button color="primary" matStepperNext>Continue to review →</button>
+</div>
+</section>
+</mat-step>
+      <mat-step label="Review & submit">
+<section class="card narrow-form">
+<h2>Review application</h2>
+<ng-container *ngIf="draft as c; else noDraft">
+<div class="summary-line">
+<span>Purpose</span>
+<strong>{{ c.purpose }}</strong>
+</div>
+<div class="summary-line">
+<span>Requested amount</span>
+<strong>{{ c.amount | currency:'EUR' }}</strong>
+</div>
+<div class="summary-line">
+<span>Repayment term</span>
+<strong>{{ c.termMonths }} months</strong>
+</div>
+<div class="summary-line">
+<span>Documents received</span>
+<strong>{{ currentDocuments.length }}</strong>
+</div>
+<p class="muted">Submission sends the application for review. An approval does not disburse funds automatically.</p>
+<p class="small muted" *ngIf="creditChanged">Save your changes in Your plan before submitting.</p>
+<button mat-flat-button color="primary" (click)="submitCredit()" [disabled]="busy || !creditEligible || creditChanged || currentDocuments.length < 2">Submit application</button>
+</ng-container>
+<ng-template #noDraft>
+<p>Save an application draft first, then choose it in the Documents step.</p>
+</ng-template>
+</section>
+</mat-step>
+    </mat-stepper>
+    </fieldset>
+    </div>
+    <section class="card space-top">
+<h2>Your applications</h2>
+<div class="list-row" *ngFor="let c of d.credits">
+<div>
+<strong>{{ c.purpose }}</strong>
+<p class="muted small">{{ c.amount | currency:'EUR' }} · {{ c.termMonths }} months</p>
+<p class="small" *ngIf="c.reviewNote">Review note: {{ c.reviewNote }}</p>
+</div>
+<div class="row-end">
+<app-status-badge [value]="c.status"></app-status-badge>
+<button mat-button *ngIf="c.status === 'DRAFT'" [disabled]="busy || !creditEligible" (click)="continueCredit(c.id)">Continue draft</button>
+</div>
+</div>
+<p *ngIf="!d.credits.length" class="empty-state">No applications yet. Start with your plan above.</p>
+</section>
+  </ng-container>
+
+  <ng-container *ngIf="section === 'onboarding'">
+    <mat-stepper [linear]="true" [selectedIndex]="detailsSaved ? 1 : 0">
+<ng-template matStepperIcon="edit"><span aria-hidden="true">✓</span></ng-template>
+<ng-template matStepperIcon="done"><span aria-hidden="true">✓</span></ng-template>
+<mat-step label="Your details" [completed]="detailsSaved" [editable]="false">
+<form *ngIf="!detailsSaved" class="card form-grid narrow-form" #profileForm="ngForm" (ngSubmit)="saveProfile()">
+<h2>Personal details</h2>
+<p class="muted">Check your details before continuing. They are locked after submission.</p>
+<mat-form-field appearance="outline">
+<mat-label>Email address</mat-label>
+<input matInput name="email" type="email" [(ngModel)]="profile.email" required email autocomplete="email">
+</mat-form-field>
+<div class="two-fields">
+<mat-form-field appearance="outline">
+<mat-label>Phone number</mat-label>
+<input matInput name="phone" [(ngModel)]="profile.phone" required autocomplete="tel">
+</mat-form-field>
+<mat-form-field appearance="outline">
+<mat-label>Date of birth</mat-label>
+<input matInput type="date" name="dob" [(ngModel)]="profile.dateOfBirth" required>
+</mat-form-field>
+</div>
+<div class="two-fields">
+<mat-form-field appearance="outline">
+<mat-label>Country</mat-label>
+<input matInput name="country" [(ngModel)]="profile.country" required autocomplete="country-name">
+</mat-form-field>
+<mat-form-field appearance="outline">
+<mat-label>Occupation</mat-label>
+<input matInput name="occupation" [(ngModel)]="profile.occupation" required>
+</mat-form-field>
+</div>
+<button mat-flat-button color="primary" [disabled]="busy || !active || profileForm.invalid">Save and continue</button>
+</form>
+</mat-step>
+<mat-step label="Identity document" [editable]="false">
+<section class="card narrow-form">
+<h2>Identity document</h2>
+<p class="muted">Submit an identity document for administrator review. Onboarding closes after upload.</p>
+<label class="upload-card">
+<span>▧</span>
+<strong>Upload identity document</strong>
+<small>PDF, PNG, or JPEG · up to 5 MB</small>
+<input type="file" accept="application/pdf,image/png,image/jpeg" [disabled]="busy || !active || !detailsSaved || !d.onboardingAvailable" (change)="upload($event,'IDENTITY',false)" aria-label="Upload onboarding identity document">
+</label>
+<ng-container *ngFor="let doc of d.documents">
+<ng-container *ngIf="!doc.applicationId">
+<ng-container *ngTemplateOutlet="documentList; context: {rows: [doc]}">
+</ng-container>
+</ng-container>
+</ng-container>
+<a mat-button routerLink="/dashboard/overview">Return to overview</a>
+</section>
+</mat-step>
+</mat-stepper>
+  </ng-container>
+
+  <app-security-panel *ngIf="section === 'security'" [transactions]="d.transactions" [admin]="isAdmin" [status]="d.account.status" (changed)="load()"></app-security-panel>
+</ng-container>
+
+<ng-template #activity let-rows="rows">
+<div class="list-row" *ngFor="let a of rows">
+<div class="activity-icon" [class.incoming]="incoming(a)">{{ incoming(a) ? '↙' : '↗' }}</div>
+<div class="row-main">
+<strong>{{ activityName(a) }}</strong>
+<p class="muted small">{{ a.timestamp | date:'MMM d, HH:mm' }} <span *ngIf="a.counterpartyIban"> · {{ a.counterpartyIban }}</span>
+</p>
+</div>
+<div class="row-end">
+<strong [class.positive]="incoming(a)">{{ incoming(a) ? '+' : '−' }}{{ a.amount | currency:'EUR' }}</strong>
+<span class="small" [class.declined]="a.returnCode !== '00'">{{ a.returnCode === '00' ? 'Completed' : 'Declined · no money moved' }}</span>
+</div>
+</div>
+<div class="empty-state" *ngIf="!rows.length">
+<h3>No transactions</h3>
+<p>Your activity will appear here after you move money.</p>
+</div>
+</ng-template>
+<ng-template #documentList let-rows="rows">
+<div class="document-row" *ngFor="let doc of rows">
+<div class="section-title">
+<strong>{{ doc.kind | titlecase }} · {{ doc.filename }}</strong>
+<a mat-button [href]="'/api/finance/documents/' + doc.id + '/download'">Download</a>
+</div>
+<span class="status-chip">{{ scanLabel(doc.scanStatus) }}</span>
+<details *ngIf="doc.extractedText">
+<summary>Review extracted text</summary>
+<pre>{{ doc.extractedText }}</pre>
+</details>
+<p class="small muted">Text extraction is not document verification. Check the result manually.</p>
+</div>
+</ng-template>
+<ng-template #schedulePicker>
+<h2 mat-dialog-title class="schedule-title">
+<svg class="clock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+Schedule transfer</h2>
+<mat-dialog-content class="schedule-content">
+<mat-calendar [(selected)]="scheduleDate" (selectedChange)="scheduleError = ''" [minDate]="scheduleMinDate" [startAt]="scheduleDate" aria-label="Transfer date"></mat-calendar>
+<div class="schedule-time">
+<mat-form-field appearance="outline"><mat-label>Hour</mat-label><mat-select [(ngModel)]="scheduleHour" (ngModelChange)="scheduleError = ''"><mat-option *ngFor="let hour of hours" [value]="hour">{{ hour < 10 ? '0' + hour : hour }}</mat-option></mat-select></mat-form-field>
+<span class="time-separator" aria-hidden="true">:</span>
+<mat-form-field appearance="outline"><mat-label>Minute</mat-label><mat-select [(ngModel)]="scheduleMinute" (ngModelChange)="scheduleError = ''"><mat-option *ngFor="let minute of minutes" [value]="minute">{{ minute < 10 ? '0' + minute : minute }}</mat-option></mat-select></mat-form-field>
+</div>
+<p class="small muted schedule-zone">{{ timeZone }} · 24-hour time</p>
+<p class="error-banner" role="alert" *ngIf="scheduleError">{{ scheduleError }}</p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+<button mat-button mat-dialog-close>Cancel</button>
+<button mat-flat-button color="primary" (click)="reviewSchedule()" [disabled]="!scheduleDate || !paymentReady">Review schedule</button>
+</mat-dialog-actions>
+</ng-template>
+
+<ng-template #confirmation>
+<h2 mat-dialog-title>{{ dialogTitle }}</h2>
+<mat-dialog-content>
+<ng-container *ngIf="dialogKind === 'payment'">
+<div class="summary-line">
+<span>Sending</span>
+<strong>{{ payment.amount | currency:'EUR' }}</strong>
+</div>
+<div class="summary-line">
+<span>Recipient</span>
+<strong class="mono">{{ payment.recipientIban }}</strong>
+</div>
+<p *ngIf="payment.scheduledAt">Scheduled: {{ payment.scheduledAt | date:'medium' }} (local time). Funds are checked at execution, not reserved now.</p>
+<mat-progress-bar *ngIf="riskLoading" mode="indeterminate" aria-label="Checking payment signals">
+</mat-progress-bar>
+<div *ngIf="risk as r" class="risk-card">
+<strong>{{ r.level }} risk signal · {{ r.score }}/100</strong>
+<p>{{ r.reasons }}</p>
+<p class="small muted">A risk score supports review; it does not determine guilt.</p>
+</div>
+</ng-container>
+<ng-container *ngIf="dialogKind === 'pocket'">
+<mat-form-field appearance="outline" class="full-width">
+<mat-label>Amount (€)</mat-label>
+<input matInput type="number" [(ngModel)]="moveAmount" min="0.01" step="0.01" required>
+</mat-form-field>
+<p class="muted">Pocket balance: {{ selectedPocket?.balance | currency:'EUR' }}. Main balance: {{ data?.account?.amount | currency:'EUR' }}.</p>
+</ng-container>
+<p *ngIf="dialogKind === 'close'">All {{ selectedPocket?.balance | currency:'EUR' }} in this pocket will return to your main balance.</p>
+<p *ngIf="dialogKind === 'cancel'">This pending transfer will not execute.</p>
+<p class="error-banner" role="alert" *ngIf="error">{{ error }}</p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+<button mat-button mat-dialog-close [disabled]="busy">Go back</button>
+<button mat-flat-button color="primary" (click)="confirm()" [disabled]="busy || riskLoading || (dialogKind === 'pocket' && !(moveAmount > 0))">{{ busy ? 'Working…' : 'Confirm' }}</button>
+</mat-dialog-actions>
+</ng-template>

@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 
 @Service
 public class FraudService {
+    @org.springframework.beans.factory.annotation.Autowired private DailyPaymentUsage usage;
     private final FraudScoringEngine engine;
     private final RiskAssessmentRepository assessments;
     private final TransactionRepository transactions;
@@ -27,6 +28,9 @@ public class FraudService {
         UserModel user = users.findById(userId).orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
         AccountModel account = user.getAccountId()==null ? null : accounts.findById(user.getAccountId()).orElse(null);
         if (account==null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No account is assigned");
-        return engine.assess(userId, recipient, amount, transactions.findAllByCardNumber(account.getCardNumber()));
+        RiskAssessment result=engine.assess(userId,recipient,amount,transactions.findAllByCardNumber(account.getCardNumber()));
+        DailyPaymentUsage.Usage current=usage.current(account);
+        DailyPaymentUsage.Usage projected=DailyPaymentUsage.values(current.getDailyTx()+1,current.getDailyTxSum()+amount.doubleValue(),account.getDailyTxLimit(),account.getDailyTxSumLimit());
+        if(projected.getLimitScore()>0){result.setScore(Math.min(100,result.getScore()+(int)Math.round(projected.getLimitScore()*.25)));result.setLevel(result.getScore()>=60?"HIGH":result.getScore()>=35?"MEDIUM":"LOW");result.setReasons(result.getReasons()+"; Daily payment usage "+projected.getLevel().toLowerCase(java.util.Locale.ROOT));}return result;
     }
 }

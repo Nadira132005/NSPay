@@ -18,9 +18,11 @@ public class FinanceController {
     private final RiskAssessmentRepository risks;
     private final CreditApplicationRepository credits;
     private final CreditDocumentRepository documents;
+    private final OnboardingService onboarding;
     public FinanceController(FinanceService finance,FraudService fraud,RiskAssessmentRepository risks,
-                             CreditApplicationRepository credits,CreditDocumentRepository documents) {
+                             CreditApplicationRepository credits,CreditDocumentRepository documents,OnboardingService onboarding) {
         this.finance=finance; this.fraud=fraud; this.risks=risks; this.credits=credits; this.documents=documents;
+        this.onboarding=onboarding;
     }
     private long id(HttpServletRequest request) {
         Object id=request.getAttribute("authenticatedUserId");
@@ -52,32 +54,50 @@ public class FinanceController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode="410",description="Use /api/investments/orders instead.")
     @PostMapping("/trades") @io.swagger.v3.oas.annotations.Operation(summary="Legacy trading endpoint", description="Retired fixed-price endpoint. Returns 410 Gone; use POST /api/investments/orders with a current server-issued quote.")
     public TradeOrder trade(HttpServletRequest request,@Valid @RequestBody FinanceRequests.Trade body) { return finance.trade(id(request),body); }
-    @PutMapping("/profile") @io.swagger.v3.oas.annotations.Operation(summary="Save personal profile details", description="Stores contact details, date of birth and occupation. Age must be at least 18. Saving details does not verify identity.")
+    @GetMapping("/onboarding") @io.swagger.v3.oas.annotations.Operation(summary="Open the current user’s unfinished onboarding", description="Identity comes from the authenticated session, never a client user ID. Requires an active account. Returns DETAILS or IDENTITY for the next unfinished step. Submitted or verified onboarding returns 409 and cannot be reopened.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode="200",description="Next unfinished step",content=@io.swagger.v3.oas.annotations.media.Content(schema=@io.swagger.v3.oas.annotations.media.Schema(implementation=com.nspay.config.ApiViews.Onboarding.class)))
+    public Map<String,Object> onboarding(HttpServletRequest request){return onboarding.own(id(request));}
+    @GetMapping("/onboarding/reviews") @io.swagger.v3.oas.annotations.Operation(summary="List onboarding records for administrator review", description="Administrator only, checked against the stored role. Returns at most 100 profiles with their original onboarding document metadata, current version and review outcome. Does not include credit documents or document bytes.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode="200",description="Onboarding review queue",content=@io.swagger.v3.oas.annotations.media.Content(array=@io.swagger.v3.oas.annotations.media.ArraySchema(schema=@io.swagger.v3.oas.annotations.media.Schema(implementation=com.nspay.config.ApiViews.OnboardingReview.class))))
+    public List<Map<String,Object>> onboardingReviews(HttpServletRequest request){return onboarding.reviews(id(request));}
+    @GetMapping("/onboarding/users/{subject}") @io.swagger.v3.oas.annotations.Operation(summary="Inspect a user’s onboarding for administrator review", description="Administrator only, checked before looking up the subject. Returns the user’s saved details, profile version and onboarding document metadata. Credit documents are excluded; originals can be downloaded through the protected document endpoint. Customers cannot inspect another user’s onboarding.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode="200",description="Onboarding review record",content=@io.swagger.v3.oas.annotations.media.Content(schema=@io.swagger.v3.oas.annotations.media.Schema(implementation=com.nspay.config.ApiViews.OnboardingReview.class)))
+    public Map<String,Object> inspectOnboarding(HttpServletRequest request,@PathVariable long subject){return onboarding.inspect(id(request),subject);}
+    @PostMapping("/onboarding/users/{subject}/review") @io.swagger.v3.oas.annotations.Operation(summary="Approve or deny a user’s identity verification", description="Administrator only; requires submitted personal details and an onboarding IDENTITY document. VERIFIED enables credit only while the account is ACTIVE; DECLINED denies or revokes verification. Both decisions keep customer details and documents locked. Current profile version is required; stale decisions return 409. Account lock, profile version, reviewer, note, timestamp and audit record commit together, serialized with credit eligibility checks.")
+    public CustomerProfile onboardingReview(HttpServletRequest request,@PathVariable long subject,@Valid @RequestBody FinanceRequests.OnboardingDecision body){return onboarding.review(id(request),subject,body);}
+    @PutMapping("/profile") @io.swagger.v3.oas.annotations.Operation(summary="Submit personal details once", description="Stores the signed-in user’s contact details, date of birth and occupation. Age must be at least 18. Submitted details cannot be overwritten, including before verification; repeated writes return 409. Client ownership or verification fields are ignored. Saving details does not verify identity.")
     public CustomerProfile profile(HttpServletRequest request,@Valid @RequestBody FinanceRequests.Profile body) { return finance.saveProfile(id(request),body); }
-    @PostMapping("/credit") @io.swagger.v3.oas.annotations.Operation(summary="Create a credit application draft", description="Saves a DRAFT without submitting it or changing the account balance.")
+    @PostMapping("/credit") @io.swagger.v3.oas.annotations.Operation(summary="Create a credit application draft", description="Requires administrator-approved VERIFIED identity and an ACTIVE account. Locks both account and profile before saving a DRAFT. Does not submit it or change the account balance.")
     public CreditApplication credit(HttpServletRequest request,@Valid @RequestBody FinanceRequests.Credit body) { return finance.createCredit(id(request),body); }
-    @PostMapping("/credit/{applicationId}/submit") @io.swagger.v3.oas.annotations.Operation(summary="Submit a credit application", description="Requires a saved profile plus IDENTITY and INCOME documents belonging to this draft. Changes DRAFT to UNDER_REVIEW.")
+    @PutMapping("/credit/{applicationId}") @io.swagger.v3.oas.annotations.Operation(summary="Update an owned credit draft", description="Requires VERIFIED identity and an ACTIVE account. Updates purpose, amount, term and monthly income without creating another application or changing its documents. Account, profile and owned draft are locked in order; submitted applications return 409, another user’s application returns 404. Ownership and status cannot be set through the request.")
+    public CreditApplication updateCredit(HttpServletRequest request,@PathVariable long applicationId,@Valid @RequestBody FinanceRequests.Credit body) { return finance.updateCredit(id(request),applicationId,body); }
+    @GetMapping("/credit/reviews") @io.swagger.v3.oas.annotations.Operation(summary="Filter and sort the administrator credit review queue",description="Stored administrator role required. Server-side pagination (up to 100), purpose/username search, status filter and whitelisted createdAt/amount/monthlyIncome/termMonths/purpose sorting. Returns application details and applicant username; excludes the acting administrator’s own applications. Review and document endpoints remain protected independently.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode="200",description="Paged credit review queue",content=@io.swagger.v3.oas.annotations.media.Content(schema=@io.swagger.v3.oas.annotations.media.Schema(implementation=com.nspay.config.ApiViews.CreditQueue.class)))
+    public Map<String,Object> creditQueue(HttpServletRequest request,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="20") int size,@RequestParam(defaultValue="") String search,@RequestParam(defaultValue="UNDER_REVIEW") String status,@RequestParam(defaultValue="createdAt") String sort,@RequestParam(defaultValue="desc") String direction){return finance.creditQueue(id(request),page,size,search,status,sort,direction);}
+    @PostMapping("/credit/{applicationId}/submit") @io.swagger.v3.oas.annotations.Operation(summary="Submit a credit application", description="Rechecks VERIFIED identity and ACTIVE account under the same locks used for administrator status/verification changes. Requires an owned draft plus its owned IDENTITY and INCOME documents. Changes DRAFT to UNDER_REVIEW.")
     public CreditApplication submit(HttpServletRequest request,@PathVariable long applicationId) { return finance.submitCredit(id(request),applicationId); }
-    @PostMapping(value="/documents", consumes=MediaType.MULTIPART_FORM_DATA_VALUE) @io.swagger.v3.oas.annotations.Operation(summary="Upload a supporting document", description="Multipart upload: kind is IDENTITY or INCOME; applicationId is optional for onboarding documents. PDF, PNG and JPEG content only, up to 5 MB. Extracted text requires manual review; document authenticity is not verified.")
+    @PostMapping(value="/documents", consumes=MediaType.MULTIPART_FORM_DATA_VALUE) @io.swagger.v3.oas.annotations.Operation(summary="Upload an onboarding or credit document", description="PDF, PNG or JPEG content up to 5 MB. Without applicationId, only IDENTITY is accepted after saved personal details; the first successful upload atomically submits and locks onboarding. With applicationId, VERIFIED identity, ACTIVE account and ownership of a DRAFT are required. Extracted text is not identity verification.")
     public CreditDocument upload(HttpServletRequest request,@RequestParam(required=false) Long applicationId,
         @RequestParam String kind,@RequestParam MultipartFile file) throws IOException { return finance.upload(id(request),applicationId,kind,file); }
     @GetMapping("/documents/{documentId}/download") @io.swagger.v3.oas.annotations.Operation(summary="Download a document", description="Owner or administrator only. Returns the original PDF, PNG or JPEG as an attachment.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode="200",description="Original document attachment",content=@io.swagger.v3.oas.annotations.media.Content(mediaType="application/octet-stream",schema=@io.swagger.v3.oas.annotations.media.Schema(type="string",format="binary")))
     public ResponseEntity<byte[]> download(HttpServletRequest request,@PathVariable long documentId) {
-        CreditDocument document=documents.findById(documentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (document.getUserId()!=id(request)) reviewer(request);
+        long owner=id(request);boolean admin=finance.user(owner).getRole()==com.nspay.enums.UserRole.Admin;
+        CreditDocument document=(admin?documents.findById(documentId):documents.findByIdAndUserId(documentId,owner)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(document.getContentType()))
             .header(HttpHeaders.CONTENT_DISPOSITION,ContentDisposition.attachment().filename(document.getFilename()).build().toString())
             .header("X-Content-Type-Options","nosniff").body(document.getContent());
     }
-    @PostMapping("/risk-assessments") @io.swagger.v3.oas.annotations.Operation(summary="Record a payment risk assessment", description="Stores a behavioral risk score, reasons and model version for the current user. Scores do not determine misconduct.")
+    @PostMapping("/risk-assessments") @io.swagger.v3.oas.annotations.Operation(summary="Record an administrator payment risk assessment", description="Administrator only. Stores a legacy behavioral risk score, reasons and model version. Scores do not determine misconduct; use the scored payment queue for customer transaction review.")
     public RiskAssessment assess(HttpServletRequest request,@Valid @RequestBody FinanceRequests.Payment body) {
+        reviewer(request);
         return fraud.assess(id(request),body.getRecipientIban().replaceAll("\\s+", "").toUpperCase(Locale.ROOT),body.getAmount());
     }
-    @GetMapping("/risk-assessments") @io.swagger.v3.oas.annotations.Operation(summary="List the current user’s risk assessments", description="Returns stored payment risk signals for the authenticated user.")
-    public List<RiskAssessment> risks(HttpServletRequest request) { return risks.findByUserIdOrderByCreatedAtDesc(id(request)); }
-    @PostMapping("/risk-preview") @io.swagger.v3.oas.annotations.Operation(summary="Preview payment risk without saving", description="Calculates a behavioral score for a proposed payment without saving an assessment or moving funds.")
+    @GetMapping("/risk-assessments") @io.swagger.v3.oas.annotations.Operation(summary="List stored risk assessments for administrator review", description="Administrator only. Returns the latest 100 stored payment risk signals across users. Customer access is forbidden.")
+    public List<RiskAssessment> risks(HttpServletRequest request) { reviewer(request);return risks.findTop100ByOrderByCreatedAtDesc(); }
+    @PostMapping("/risk-preview") @io.swagger.v3.oas.annotations.Operation(summary="Preview payment risk without saving", description="Administrator only. Calculates a behavioral score for a proposed payment without saving an assessment or moving funds. Customer transfer confirmations do not request or display risk signals.")
     public RiskAssessment preview(HttpServletRequest request,@Valid @RequestBody FinanceRequests.Payment body) {
+        reviewer(request);
         return fraud.preview(id(request),body.getRecipientIban().replaceAll("\\s+", "").toUpperCase(Locale.ROOT),body.getAmount());
     }
     @GetMapping("/reviews") @io.swagger.v3.oas.annotations.Operation(summary="Get the administrator review queue", description="Administrator only. Returns the latest 100 credit applications and payment risk assessments.")
@@ -89,8 +109,8 @@ public class FinanceController {
     }
     @GetMapping("/credit/{applicationId}/documents") @io.swagger.v3.oas.annotations.Operation(summary="List documents for a credit application", description="Owner or administrator only. Returns document metadata and extracted text.")
     public List<CreditDocument> creditDocuments(HttpServletRequest request,@PathVariable long applicationId) {
-        CreditApplication credit=credits.findById(applicationId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (credit.getUserId()!=id(request)) reviewer(request);
+        long owner=id(request);boolean admin=finance.user(owner).getRole()==com.nspay.enums.UserRole.Admin;
+        CreditApplication credit=(admin?credits.findById(applicationId):credits.findByIdAndUserId(applicationId,owner)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         return documents.findByApplicationIdAndUserId(applicationId,credit.getUserId());
     }
     @PostMapping("/credit/{applicationId}/review") @io.swagger.v3.oas.annotations.Operation(summary="Review a credit application", description="Administrator only. An UNDER_REVIEW application can become APPROVED or DECLINED with a note. Approval does not automatically disburse funds.")

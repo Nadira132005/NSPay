@@ -1,0 +1,28 @@
+.onboarding-banner {
+  padding: 14px 18px;
+  gap: 12px;
+}
+
+.onboarding-banner p {
+  margin: 4px 0 0;
+}
+
+.credit-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.credit-workflow.is-disabled {
+  opacity: .55;
+  filter: grayscale(.8);
+}
+
+.credit-access p {
+  margin: 5px 0 0;
+}
+.profile-states{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media(max-width:600px){.page-heading{flex-wrap:wrap}.profile-states{width:100%}}
+
+.daily-warning{background:#fff7e6;border-color:#e5cb97;align-items:flex-start}.warning-icon{display:grid;place-items:center;flex:0 0 26px;height:26px;border-radius:50%;background:#f4dfb1;color:#8d5b15;font-weight:700}.daily-warning p{margin:6px 0}.daily-warning small{color:#7e6b48}

@@ -21,6 +21,7 @@ public class TransferService {
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final TransactionRepository transactionRepository;
+    @org.springframework.beans.factory.annotation.Autowired private com.nspay.finance.DailyPaymentUsage usage;
     private final com.nspay.finance.FraudService fraudService;
 
     public TransferService(AccountRepository accountRepository, UserRepository userRepository,
@@ -65,18 +66,10 @@ public class TransferService {
         if (!Double.isFinite(amount) || amount <= 0 || sender.getAmount() < amount) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient funds");
         }
-        if (sender.getDailyTx() >= sender.getDailyTxLimit()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Daily transfer count limit exceeded");
-        }
-        if (sender.getDailyTxSum() + amount > sender.getDailyTxSumLimit()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Daily transfer amount limit exceeded");
-        }
-
-        // Demo monitoring only: risk assessments are explainable review signals, not a fraud verdict.
+        // Risk assessments inform administrator review without rejecting a payment.
         fraudService.assess(userId, recipient.getIban(), java.math.BigDecimal.valueOf(amount));
         sender.setAmount(Math.round((sender.getAmount() - amount) * 100.0) / 100.0);
-        sender.setDailyTx(sender.getDailyTx() + 1);
-        sender.setDailyTxSum(sender.getDailyTxSum() + amount);
+
         recipient.setAmount(Math.round((recipient.getAmount() + amount) * 100.0) / 100.0);
         accountRepository.save(sender);
         accountRepository.save(recipient);
@@ -84,6 +77,7 @@ public class TransferService {
         Timestamp now = Timestamp.from(Instant.now());
         transactionRepository.save(makeTransaction(sender, amount, now, "TRANSFER_OUT", recipient.getIban()));
         transactionRepository.save(makeTransaction(recipient, amount, now, "TRANSFER_IN", sender.getIban()));
+        transactionRepository.flush();usage.sync(sender);
         return new TransferReceipt(sender.getIban(), recipient.getIban(), amount, sender.getAmount());
     }
 

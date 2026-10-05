@@ -1,0 +1,14 @@
+<div class="chart-shell" *ngIf="points.length">
+  <div class="chart-readout">
+    <span>{{ (focused ?? points[points.length-1]).close | currency:currency }} <small *ngIf="kind === 'price'" [class.down]="change < 0">{{ change > 0 ? '+' : '' }}{{ change | number:'1.2-2' }}%</small></span>
+    <time>{{ readoutDate((focused ?? points[points.length-1]).datetime) }} {{ kind === 'profit' ? 'UTC' : 'ET' }}</time>
+  </div>
+  <svg viewBox="0 0 760 280" tabindex="0" role="img" [attr.aria-label]="symbol + ' history in ' + currency + '. Use left and right arrow keys to inspect prices.'" (pointermove)="pointer($event)" (pointerdown)="pointer($event)" (pointerleave)="index=null" (keydown)="keyboard($event)" (blur)="index=null">
+    <defs><linearGradient [attr.id]="gradientId" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#569aff" stop-opacity=".2"/><stop offset="100%" stop-color="#569aff" stop-opacity=".015"/></linearGradient></defs>
+    <g *ngFor="let tick of ticks"><line x1="76" x2="738" [attr.y1]="tick.y" [attr.y2]="tick.y" class="grid"/><text x="65" [attr.y]="tick.y+4" text-anchor="end">{{ tick.value | currency:currency:'symbol':'1.0-2' }}</text></g>
+    <path [attr.d]="area" [attr.fill]="'url(#' + gradientId + ')'"/><path [attr.d]="line" class="price-line"/>
+    <line x1="76" x2="738" y1="242" y2="242" class="grid"/>
+    <text *ngFor="let d of dates" [attr.x]="d.x" y="267" [attr.text-anchor]="d.anchor">{{ d.label }}</text>
+    <ng-container *ngIf="focused as p"><line [attr.x1]="x(index!)" [attr.x2]="x(index!)" y1="20" y2="242" class="crosshair"/><circle [attr.cx]="x(index!)" [attr.cy]="y(p.close)" r="5" class="price-dot"/></ng-container>
+  </svg>
+</div>

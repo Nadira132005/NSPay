@@ -100,18 +100,19 @@ class TransactionControllerIntegrationTest {
     }
 
     @Test
-    void shouldReturnDailyFrequencyLimitExceeded() throws Exception {
+    void shouldAllowPaymentsAboveConsumedAdvisoryLimits() throws Exception {
         AccountModel account = accountRepository.findByCardNumber("1234567812345678");
-        account.setDailyTxLimit(0);
-        account.setDailyTx(1);
+        account.setDailyTxLimit(1);account.setDailyTxSumLimit(10);account.setDailyTx(1);account.setDailyTxSum(10);account.setAmount(90);
         accountRepository.save(account);
-
-        mockMvc.perform(post("/transaction")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"cardNumber\":\"1234567812345678\",\"amount\":10.0,\"timestamp\":\"2026-05-03T10:00:00\"}"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code", is("65")))
-                .andExpect(jsonPath("$.businessLogicViolation", is(true)));
+        TransactionModel prior=new TransactionModel();prior.setCardNumber(account.getCardNumber());prior.setAmount(10.0);prior.setTimestamp(java.sql.Timestamp.from(java.time.Instant.now().minusSeconds(60)));prior.setReturnCode("00");prior.setTransactionType("CARD_PAYMENT");transactionRepository.save(prior);
+        mockMvc.perform(post("/transaction").contentType(MediaType.APPLICATION_JSON)
+            .content("{\"cardNumber\":\"1234567812345678\",\"amount\":10.0,\"timestamp\":\"2026-05-03T10:00:00\"}"))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.code",is("00"))).andExpect(jsonPath("$.businessLogicViolation",is(false)));
+        AccountModel result=accountRepository.findByCardNumber(account.getCardNumber());
+        org.assertj.core.api.Assertions.assertThat(result.getAmount()).isEqualTo(80);
+        org.assertj.core.api.Assertions.assertThat(result.getDailyTx()).isEqualTo(2);
+        org.assertj.core.api.Assertions.assertThat(result.getDailyTxSum()).isEqualTo(20);
+        org.assertj.core.api.Assertions.assertThat(result.getStatus()).isEqualTo(AccountStatus.ACTIVE);
     }
 
     @Test

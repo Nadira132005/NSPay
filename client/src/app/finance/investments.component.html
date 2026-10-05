@@ -1,0 +1,180 @@
+<p class="error-banner" role="alert" *ngIf="error">{{ error }}</p>
+<div class="notice stream-notice" role="status" *ngIf="streaming && streamStatus !== 'LIVE'">
+  <span>Prices are {{ streamStatus === 'CONNECTING' ? 'connecting' : 'reconnecting' }}. Updates resume automatically; orders are paused.<ng-container *ngIf="portfolio?.priceAt"> Last available valuation: {{ portfolio?.priceAt | date:'mediumTime' }}.</ng-container></span>
+  <button mat-stroked-button (click)="retryPrices()" [disabled]="streamStatus === 'CONNECTING'">Retry</button>
+</div>
+<div class="workspace-metrics portfolio-metrics">
+  <section class="card"><span class="muted">Portfolio value</span>
+    <h2>{{ portfolio?.totalValue === null || !portfolio ? '—' : (portfolio.totalValue | currency:'EUR') }}</h2>
+    <p class="return-line" [class.positive]="(portfolio?.totalGain ?? 0) >= 0" [class.negative]="(portfolio?.totalGain ?? 0) < 0">{{ portfolio?.totalGain === null || !portfolio ? 'Valuation unavailable' : (portfolio.totalGain | currency:'EUR') + ' total gain' }}</p>
+    <p class="small muted">Cash and holdings</p>
+  </section>
+  <section class="card"><span class="muted">Holdings value</span>
+    <h2>{{ portfolio?.holdingsValue === null || !portfolio ? '—' : (portfolio.holdingsValue | currency:'EUR') }}</h2>
+    <p class="return-line" [class.positive]="(portfolio?.unrealizedGain ?? 0) >= 0" [class.negative]="(portfolio?.unrealizedGain ?? 0) < 0" *ngIf="portfolio?.unrealizedGain !== null && portfolio">{{ portfolio.unrealizedGain | currency:'EUR' }} ({{ portfolio.unrealizedGainPercent | number:'1.2-2' }}%) unrealized</p>
+    <p class="small muted">{{ portfolio?.realizedGain ?? 0 | currency:'EUR' }} realized</p>
+  </section>
+  <section class="card"><span class="muted">Investment cash</span><h2>{{ cash | currency:'EUR' }}</h2>
+    <div class="button-row"><button mat-flat-button color="primary" (click)="review('deposit')" [disabled]="!active || busy">Deposit</button><button mat-stroked-button (click)="review('withdraw')" [disabled]="!active || busy || cash <= 0">Withdraw</button></div>
+    <p class="small muted">Account balance: {{ mainBalance | currency:'EUR' }}</p>
+  </section>
+</div>
+<p class="notice" *ngIf="portfolio?.valuationStatus === 'INCOMPLETE' && (!streaming || streamStatus === 'LIVE')">Some holdings cannot be priced. {{ portfolio?.totalValue != null ? 'Showing the last available valuation.' : 'Totals will return when prices are available.' }}</p>
+<p class="notice" *ngIf="!configured && portfolio">Stock prices are unavailable. Check the backend market-data configuration.</p>
+<p class="source-note" *ngIf="portfolio?.provider === 'twelve-data'">Prices and exchange rates from Twelve Data. Orders are held in NSPay.</p>
+<section class="card space-top" style="margin-bottom:24px">
+  <div class="section-title"><div><h2>Portfolio profit</h2><p class="small muted">Realized and unrealized gains in EUR. Deposits and withdrawals do not count as profit.</p></div>
+    <div class="filter-tabs" role="group" aria-label="Profit period"><button *ngFor="let r of streaming ? ['LIVE','1M','3M','1Y'] : ['1M','3M','1Y']" (click)="profitRange=r;loadPerformance()" [class.selected]="profitRange===r" [attr.aria-pressed]="profitRange===r">{{ r === 'LIVE' ? 'Live' : r }}</button></div></div>
+  <app-price-chart [points]="profitPoints" symbol="Portfolio profit" [range]="profitRange" currency="EUR" kind="profit"></app-price-chart>
+  <p class="small muted" *ngIf="profitPoints.length < 2 && profitRange !== 'LIVE'">Daily profit history builds as your portfolio is valued.</p><p class="error-banner" *ngIf="profitError">{{ profitError }}</p>
+</section>
+<div class="market-layout">
+  <section class="card instrument-list">
+<div class="discover-controls">
+<h2>Discover</h2>
+<p class="small muted" role="status" *ngIf="pricesError && (!streaming || streamStatus === 'LIVE')">{{ pricesError }}</p>
+<mat-form-field appearance="outline">
+<mat-label>Search stocks and ETFs</mat-label>
+<input matInput [(ngModel)]="search">
+</mat-form-field>
+<div class="filter-tabs instrument-groups" role="group" aria-label="Instrument groups" tabindex="0">
+<button *ngFor="let g of groups" (click)="group=g" [class.selected]="group===g" [attr.aria-pressed]="group===g"><span aria-hidden="true">{{ groupIcons[g] ?? '📌' }}</span>{{ g }}</button>
+</div>
+</div>
+<div class="instrument-scroll" role="region" aria-label="Stocks and ETFs" tabindex="0">
+    <button class="stock-row" *ngFor="let i of instruments" (click)="select(i)" [class.selected]="selected?.symbol===i.symbol" [attr.aria-pressed]="selected?.symbol===i.symbol">
+<span class="ticker-mark">{{ i.symbol.slice(0,1) }}</span>
+<span class="stock-info">
+<strong [title]="i.name">{{ i.name }}</strong>
+<small>{{ i.symbol }} · {{ i.group }}</small>
+</span>
+<span class="stock-quote" *ngIf="quotes[i.symbol] as price">{{ price.price | currency:'USD' }}<small [class.positive]="price.change >= 0" [class.negative]="price.change < 0">{{ price.change > 0 ? '+' : '' }}{{ price.change | number:'1.2-2' }}%</small></span>
+</button>
+<p class="muted" *ngIf="!instruments.length">No matching instruments.</p>
+</div>
+  </section>
+  <section class="card price-panel" *ngIf="selected as i">
+<div class="section-title">
+<div>
+<span class="muted">{{ i.symbol }} · USD</span>
+<h2>{{ i.name }}</h2>
+</div>
+<button mat-button (click)="refresh()" [disabled]="loading || !configured">Refresh</button>
+</div>
+<mat-progress-bar *ngIf="loading" mode="indeterminate">
+</mat-progress-bar>
+<div class="trade-toolbar">
+    <div class="trade-price" *ngIf="quote as q">
+<div class="stock-price">{{ q.price | currency:'USD' }} <small [class.positive]="q.change >= 0" [class.negative]="q.change < 0">{{ q.change > 0 ? '+' : '' }}{{ q.change | number:'1.2-2' }}%</small>
+</div>
+<p class="small muted">{{ streaming ? (streamStatus === 'LIVE' ? 'Live' : 'Reconnecting') : (q.marketOpen ? 'Market open' : 'Market closed · last available price') }} · {{ q.priceAt | date:'shortTime':'UTC' }} UTC</p>
+</div>
+    <form class="order-form compact-order" #orderForm="ngForm" (ngSubmit)="review('order')">
+<div class="order-fields investment-order-fields">
+<mat-form-field appearance="outline" subscriptSizing="dynamic" floatLabel="always">
+<mat-label>Order</mat-label>
+<mat-select name="side" [(ngModel)]="side">
+<mat-option value="BUY">Buy</mat-option>
+<mat-option value="SELL">Sell</mat-option>
+</mat-select>
+</mat-form-field>
+<mat-form-field appearance="outline" subscriptSizing="dynamic" floatLabel="always">
+<mat-label>Shares</mat-label>
+<input matInput type="number" name="quantity" [(ngModel)]="quantity" min="0.000001" max="999999.999999" step="0.000001" required>
+</mat-form-field>
+</div>
+<div class="order-footer">
+<div class="order-estimate"><span>Estimated value</span>
+<strong>{{ (quote ? quote.eurPrice * quantity : 0) | currency:'EUR' }}</strong>
+</div>
+<button mat-flat-button color="primary" [disabled]="busy || loading || !active || !canReview || orderForm.invalid">Review order</button>
+</div>
+<p class="small muted order-available">Held: {{ units(i.symbol) | number:'1.0-6' }} shares · Cash: {{ cash | currency:'EUR' }}</p>
+</form>
+</div>
+    <div class="filter-tabs" role="group" aria-label="Chart period">
+<button *ngFor="let r of streaming ? ['LIVE','1D','1W','1M','1Y'] : ['1D','1W','1M','1Y']" (click)="setRange(r)" [class.selected]="range===r" [attr.aria-pressed]="range===r" [disabled]="!configured">{{ r === 'LIVE' ? 'Live' : r }}</button>
+</div>
+    <p class="error-banner" role="alert" *ngIf="marketError && (!streaming || streamStatus === 'LIVE')">{{ marketError }}</p>
+    <div class="chart-progress"><mat-progress-bar *ngIf="chartLoading" mode="indeterminate"></mat-progress-bar></div>
+    <app-price-chart [points]="points" [symbol]="i.symbol" [range]="range"></app-price-chart>
+    <div class="price-placeholder" *ngIf="!points.length">{{ chartLoading ? 'Loading price history…' : 'Price history unavailable' }}</div>
+
+  </section>
+</div>
+<section class="card space-top">
+  <div class="section-title"><h2>Holdings</h2><span class="small muted">{{ holdings.length }} positions</span></div>
+  <div class="data-table holdings-table" *ngIf="holdings.length"><table><thead><tr><th>Instrument</th><th>Shares</th><th>Average cost (EUR)</th><th>Price (USD)</th><th>Value (EUR)</th><th>Return (EUR)</th><th>Allocation</th></tr></thead>
+    <tbody><tr *ngFor="let h of holdings">
+      <td><button class="holding-link" (click)="chooseHolding(h)"><strong>{{ name(h.symbol) }}</strong><small>{{ h.symbol }}</small></button></td>
+      <td>{{ h.quantity | number:'1.0-6' }}</td><td>{{ h.averageCost | currency:'EUR' }}</td>
+      <td>{{ h.price === null ? '—' : (h.price | currency:'USD') }}</td><td>{{ h.marketValue === null ? 'Unavailable' : (h.marketValue | currency:'EUR') }}</td>
+      <td [class.positive]="(h.unrealizedGain ?? 0) >= 0" [class.negative]="(h.unrealizedGain ?? 0) < 0">{{ h.unrealizedGain === null ? '—' : (h.unrealizedGain | currency:'EUR') }}<small *ngIf="h.unrealizedGainPercent !== null">{{ h.unrealizedGainPercent | number:'1.2-2' }}%</small></td>
+      <td><div class="allocation" *ngIf="h.allocationPercent !== null"><span class="allocation-track"><span class="allocation-fill" style="display:block" [style.width.%]="h.allocationPercent"></span></span>{{ h.allocationPercent | number:'1.0-1' }}%</div><span *ngIf="h.allocationPercent === null">—</span></td>
+    </tr></tbody></table></div>
+  <p class="muted" *ngIf="!holdings.length">Your holdings will appear here after your first purchase.</p>
+</section>
+<section class="card space-top">
+<h2>Order history</h2>
+<div class="data-table">
+<table>
+<thead>
+<tr>
+<th>Instrument</th>
+<th>Order</th>
+<th>Shares</th>
+<th>Value (EUR)</th>
+<th>Date</th>
+</tr>
+</thead>
+<tbody>
+<tr *ngFor="let o of orders">
+<td>{{ o.symbol }}</td>
+<td>{{ o.side | titlecase }}</td>
+<td>{{ o.quantity | number:'1.0-6' }}</td>
+<td>{{ o.total | currency:'EUR' }}</td>
+<td>{{ o.createdAt | date:'short' }}</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="muted" *ngIf="!orders.length">No orders.</p>
+<div class="pagination" *ngIf="orderCount > 20"><button mat-button (click)="history(orderPage-1)" [disabled]="orderPage === 0 || historyLoading">Previous</button><span>Page {{ orderPage+1 }} · {{ orderCount }} orders</span><button mat-button (click)="history(orderPage+1)" [disabled]="(orderPage+1)*20 >= orderCount || historyLoading">Next</button></div>
+</section>
+<ng-template #confirmation>
+<h2 mat-dialog-title>{{ action === 'order' ? 'Confirm ' + reviewedSide.toLowerCase() : action === 'deposit' ? 'Deposit into investments' : 'Withdraw to account' }}</h2>
+<mat-dialog-content>
+  <ng-container *ngIf="action !== 'order'">
+<mat-form-field appearance="outline">
+<mat-label>Amount (€)</mat-label>
+<input matInput type="number" [(ngModel)]="amount" min="0.01" step="0.01">
+</mat-form-field>
+<p>Available: {{ (action === 'deposit' ? mainBalance : cash) | currency:'EUR' }}</p>
+<p *ngIf="action === 'withdraw'" class="small muted">Sell holdings first to withdraw their proceeds.</p>
+</ng-container>
+  <ng-container *ngIf="action === 'order' && reviewedQuote as q">
+<div class="summary-line">
+<span>Shares</span>
+<strong>{{ reviewedQuantity }} {{ q.symbol }}</strong>
+</div>
+<div class="summary-line">
+<span>Market price</span>
+<strong>{{ q.price | currency:'USD' }}</strong>
+</div>
+<div class="summary-line">
+<span>USD → EUR</span>
+<strong>{{ q.exchangeRate | number:'1.4-8' }}</strong>
+</div>
+<div class="summary-line">
+<span>Total</span>
+<strong>{{ q.eurPrice * reviewedQuantity | currency:'EUR' }}</strong>
+</div>
+<p class="small muted">{{ q.exchangeRateSource }} · Recorded {{ q.exchangeRateAt | date:'medium' }}. Quote expires {{ q.expiresAt | date:'mediumTime' }}.</p>
+</ng-container>
+<p class="error-banner" role="alert" *ngIf="error">{{ error }}</p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+<button mat-button mat-dialog-close [disabled]="busy">Cancel</button>
+<button mat-flat-button color="primary" (click)="confirm()" [disabled]="busy || (action !== 'order' && !(amount > 0))">{{ busy ? 'Processing…' : 'Confirm' }}</button>
+</mat-dialog-actions>
+</ng-template>

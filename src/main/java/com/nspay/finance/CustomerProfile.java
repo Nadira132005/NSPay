@@ -17,4 +17,7 @@ public class CustomerProfile extends OwnedRecord {
     private LocalDate dateOfBirth;
     private String occupation;
     private String onboardingStatus = "NOT_STARTED";
+    private Long reviewedBy;
+    private Instant reviewedAt;
+    @Column(length=250) private String reviewNote;
 }

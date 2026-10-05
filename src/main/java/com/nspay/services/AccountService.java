@@ -78,7 +78,8 @@ public class AccountService {
 
         AccountModel account = accountOptional.get();
         if (accountDTO.getStatus()!=null && accountDTO.getStatus()!=account.getStatus()) throw new ValidationException("Change status through the security dashboard");
-        apply(account, accountDTO);
+        if(accountDTO.getDailyTxLimit()<1||!Double.isFinite(accountDTO.getDailyTxSumLimit())||accountDTO.getDailyTxSumLimit()<0.01)throw new ValidationException("Enter positive daily limits");
+        account.setDailyTxLimit(accountDTO.getDailyTxLimit());account.setDailyTxSumLimit(accountDTO.getDailyTxSumLimit());
         return new ResponseEntity<>(accountRepository.save(account), new HttpHeaders(), HttpStatus.OK);
     }
 
@@ -87,12 +88,7 @@ public class AccountService {
     }
 
     public ResponseEntity<?> deleteAccount(long id) {
-        logger.info("Deleting account with id {}", id);
-        if (!accountRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Account with id " + id + " is not found");
-        }
-        accountRepository.deleteById(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        throw new org.springframework.web.server.ResponseStatusException(HttpStatus.METHOD_NOT_ALLOWED,"Account deletion is unavailable");
     }
 
     private AccountModel toAccount(AccountDTO accountDTO) {

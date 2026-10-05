@@ -1,0 +1,137 @@
+.portfolio-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.portfolio-metrics h2{margin:12px 0}.return-line{font-variant-numeric:tabular-nums;font-size:13px}.negative{color:#b63e3b}.stock-row{gap:10px}.stock-info{flex:1}.stock-quote{text-align:right;white-space:nowrap;font-size:12px}.stock-quote small{font-size:11px}.market-layout{grid-template-columns:320px minmax(0,1fr)}.source-note{margin:0 0 24px;font-size:12px;color:#657b70}.price-placeholder{height:290px;display:grid;place-items:center;color:#657b70}.holding-link{border:0;background:none;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer}.holding-link:hover{text-decoration:underline}.allocation{min-width:90px;display:flex;align-items:center;gap:8px}.allocation-track{width:58px;height:5px;background:#e4ece7;border-radius:5px;overflow:hidden}.allocation-fill{height:100%;background:#14694d}.pagination{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding-top:14px;font-size:12px;color:#657b70}.portfolio-footnote{font-size:12px;color:#657b70;margin-top:12px}.holdings-table{max-height:none}.holdings-table td{font-variant-numeric:tabular-nums}.price-panel{min-width:0}.chart-progress{height:4px}.source-note a{color:inherit}@media(max-width:1100px){.market-layout{grid-template-columns:270px minmax(0,1fr)}.ticker-mark{display:none}.stock-row{padding:14px 6px}}@media(max-width:800px){.portfolio-metrics,.market-layout{grid-template-columns:1fr}.stock-row{padding:14px 10px}.ticker-mark{display:grid}.instrument-list{max-height:370px;overflow:auto}.portfolio-metrics{gap:12px}.portfolio-metrics h2{font-size:26px}.price-panel{padding:18px}}
+.stream-notice{display:flex;align-items:center;justify-content:space-between;gap:16px}.stream-notice button{flex-shrink:0}
+
+.market-layout {
+  align-items: stretch;
+  grid-template-columns: 400px minmax(0, 1fr);
+}
+
+.instrument-list {
+  display: flex;
+  flex-direction: column;
+  // Let the price card set the grid row height; the catalog must not grow that row.
+  contain: size;
+  height: auto;
+  min-height: 360px;
+  max-height: none;
+  overflow: hidden;
+}
+
+.discover-controls {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.instrument-groups {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding: 4px 2px;
+  margin: 8px -2px 16px;
+}
+
+.instrument-groups::-webkit-scrollbar {
+  display: none;
+}
+
+.instrument-groups button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.instrument-groups:focus-visible,
+.instrument-groups button:focus-visible {
+  outline: 2px solid #648b49;
+  outline-offset: -2px;
+}
+
+.instrument-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #b5c3ba transparent;
+  padding-right: 6px;
+}
+
+.instrument-scroll:focus-visible {
+  outline: 2px solid #648b49;
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+.instrument-scroll .stock-row:focus-visible {
+  outline-offset: -3px;
+}
+
+.stock-info {
+  min-width: 0;
+}
+
+.stock-info strong,
+.stock-info small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stock-quote,
+.ticker-mark {
+  flex-shrink: 0;
+}
+
+// WebKit/Blink use a 6px rounded thumb; Firefox uses the standard thin scrollbar above.
+@supports selector(::-webkit-scrollbar) {
+  .instrument-scroll {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+
+  .instrument-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .instrument-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .instrument-scroll::-webkit-scrollbar-thumb {
+    background: #b5c3ba;
+    border-radius: 10px;
+  }
+
+  .instrument-scroll::-webkit-scrollbar-thumb:hover {
+    background: #81978a;
+  }
+
+  .instrument-scroll::-webkit-scrollbar-button {
+    display: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .market-layout {
+    grid-template-columns: 320px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 800px) {
+  .market-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .instrument-list {
+    contain: none;
+    height: min(520px, 80vh);
+    height: min(520px, 80svh);
+    min-height: 360px;
+  }
+}

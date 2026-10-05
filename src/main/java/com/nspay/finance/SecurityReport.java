@@ -13,4 +13,6 @@ public class SecurityReport extends OwnedRecord {
     private String decisionNote;
     private Long reviewedBy;
     private Instant reviewedAt;
+    @Column(length=250) private String publicNote;
+    @Column(length=250) private String privateNote;
 }

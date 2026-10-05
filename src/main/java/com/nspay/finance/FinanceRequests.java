@@ -50,4 +50,10 @@ public final class FinanceRequests {
         @NotBlank @Size(min=5, max=250) private String note;
         @NotNull @Pattern(regexp="APPROVED|DECLINED|REVIEWED") private String decision;
     }
+    @io.swagger.v3.oas.annotations.media.Schema(name="OnboardingDecision")
+    @Data public static class OnboardingDecision {
+        @NotNull @Pattern(regexp="VERIFIED|DECLINED") private String decision;
+        @NotBlank @Size(min=5,max=250) private String note;
+        @NotNull @Min(0) @io.swagger.v3.oas.annotations.media.Schema(description="Current profile version from the administrator review queue; stale decisions return 409.") private Long version;
+    }
 }

@@ -21,6 +21,7 @@ public class TransactionService {
 
     private static final Logger logger = LogManager.getLogger(TransactionService.class);
 
+    @Autowired private com.nspay.finance.DailyPaymentUsage usage;
     @Autowired
     private TransactionValidator transactionValidator;
     @Autowired
@@ -43,6 +44,8 @@ public class TransactionService {
         }
 
         TransactionModel transactionModel = transactionMapper.toModel(transactionDTO);
+        transactionModel.setTimestamp(java.sql.Timestamp.from(java.time.Instant.now()));
+        transactionModel.setTransactionType("CARD_PAYMENT");
         transactionModel.setReturnCode(validationResults.getCode().getCode());//ResponseCode.NOT_SUFFICIENT_FUNDS.getCode()->"51"
         transactionRepository.save(transactionModel);
         if(validationResults.isBusinessLogicViolation()){
@@ -56,8 +59,7 @@ public class TransactionService {
     }
 private void updateAccount(AccountModel accountModel, double amount){
             accountModel.setAmount(accountModel.getAmount()-amount);
-            accountModel.setDailyTx(accountModel.getDailyTx() + 1);
-            accountModel.setDailyTxSum(accountModel.getDailyTxSum() + amount);
+            transactionRepository.flush();usage.sync(accountModel);
             accountRepository.save(accountModel);
 }
 public List<TransactionModel> getAllTransactions() {

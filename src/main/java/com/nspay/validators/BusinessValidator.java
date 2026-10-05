@@ -30,14 +30,6 @@ public class BusinessValidator {
             return ValidationResults.failure(ResponseCode.INVALID_CARD_NUMBER, "Amount is null");
         }
 
-        if (accountModel.getDailyTxSum() + amount > accountModel.getDailyTxSumLimit()) {
-            return ValidationResults.success(true, ResponseCode.DAILY_TX_SUM_EXCEEDED, "Daily tx amount limit exceeded");
-        }
-
-        if (accountModel.getDailyTx() >= accountModel.getDailyTxLimit()) {
-            return ValidationResults.success(true, ResponseCode.DAILY_TX_LIMIT_EXCEEDED, "Daily tx frequency limit exceeded");
-        }
-
         if (accountModel.getAmount() < amount) {
             return ValidationResults.success(true, ResponseCode.NOT_SUFFICIENT_FUNDS, "Insufficient funds");
         }
